@@ -1,0 +1,24 @@
+{
+  "project": {
+    "id": "22842f90-9a45-4045-927b-b91320e9960f",
+    "name": "ArnZen",
+    "color": "#6366f1",
+    "widgetState": {
+      "todos": [],
+      "terminalCwd": "C:\\Users\\krist\\Projects\\ArnZen",
+      "notes": "",
+      "quickLaunchScripts": [
+        {
+          "id": "87c12045-178a-472c-a767-06d918ea433a",
+          "label": "build",
+          "command": "npm run build"
+        }
+      ]
+    },
+    "layout": {
+      "panels": [],
+      "sizes": [],
+      "minimized": []
+    }
+  }
+}

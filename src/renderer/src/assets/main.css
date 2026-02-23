@@ -1,0 +1,143 @@
+@import 'tailwindcss';
+
+@layer base {
+  :root {
+    /* ── Base palette ── */
+    --color-bg-deep: #08090d;
+    --color-bg-primary: #0c0e14;
+    --color-bg-secondary: #10131b;
+    --color-bg-tertiary: #161a25;
+    --color-bg-hover: #1c2030;
+
+    /* ── Glass surfaces ── */
+    --glass-bg: rgba(16, 19, 27, 0.6);
+    --glass-bg-hover: rgba(28, 32, 48, 0.5);
+    --glass-bg-solid: rgba(22, 26, 37, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --glass-border-hover: rgba(255, 255, 255, 0.1);
+    --glass-blur: 16px;
+    --glass-blur-heavy: 24px;
+
+    /* ── Text ── */
+    --color-text-primary: #e8eaf0;
+    --color-text-secondary: #9ba1b0;
+    --color-text-muted: #5c6275;
+
+    /* ── Borders ── */
+    --color-border: rgba(255, 255, 255, 0.06);
+    --color-border-subtle: rgba(255, 255, 255, 0.03);
+
+    /* ── Accent (indigo → violet gradient feel) ── */
+    --color-accent: #7c5cfc;
+    --color-accent-hover: #9b82ff;
+    --color-accent-glow: rgba(124, 92, 252, 0.25);
+    --color-accent-subtle: rgba(124, 92, 252, 0.1);
+
+    /* ── Semantic ── */
+    --color-success: #34d399;
+    --color-success-subtle: rgba(52, 211, 153, 0.12);
+    --color-danger: #f87171;
+    --color-danger-subtle: rgba(248, 113, 113, 0.12);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--color-bg-deep);
+    color: var(--color-text-primary);
+    overflow: hidden;
+    height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  #root {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 9999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  /* ── Electron regions ── */
+  .app-drag {
+    -webkit-app-region: drag;
+  }
+
+  .app-no-drag {
+    -webkit-app-region: no-drag;
+  }
+}
+
+/* ── Utility classes ── */
+@layer utilities {
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+  }
+
+  .glass-solid {
+    background: var(--glass-bg-solid);
+    backdrop-filter: blur(var(--glass-blur-heavy));
+    -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  }
+
+  .glass-border {
+    border: 1px solid var(--glass-border);
+  }
+
+  .glow-accent {
+    box-shadow: 0 0 20px var(--color-accent-glow), 0 0 6px var(--color-accent-glow);
+  }
+
+  .glow-accent-sm {
+    box-shadow: 0 0 10px var(--color-accent-glow);
+  }
+
+  /* ── Allotment sash overrides ── */
+  .sash-container .sash {
+    background: transparent;
+  }
+
+  .sash-container .sash:hover,
+  .sash-container .sash.active {
+    background: rgba(255, 255, 255, 0.08);
+    transition: background 0.15s;
+  }
+
+  /* ── Widget panel base ── */
+  .widget-panel {
+    background: var(--color-bg-secondary);
+  }
+
+  .gradient-mesh {
+    background:
+      radial-gradient(ellipse 80% 60% at 10% 90%, rgba(124, 92, 252, 0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 50% at 85% 20%, rgba(56, 189, 248, 0.06) 0%, transparent 50%),
+      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(168, 85, 247, 0.04) 0%, transparent 50%),
+      var(--color-bg-deep);
+  }
+}
