@@ -127,6 +127,7 @@ export function WidgetArea(): React.JSX.Element {
     const descriptions: Record<string, string> = {
       todo: 'Track tasks and stay organized',
       'source-control': 'Stage, commit, and push changes',
+      issues: 'Track and manage GitHub issues',
       terminal: 'Run commands in your project'
     }
 

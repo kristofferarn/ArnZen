@@ -10,6 +10,7 @@ import {
   DEFAULT_PROJECT_SETTINGS,
   DirEntry,
   GitFileStatus,
+  GitHubIssue,
   GitStatusDetailResult,
   GitStatusResult,
   GlobalConfig,
@@ -27,6 +28,21 @@ const execFileAsync = promisify(execFile)
 async function runGit(cwd: string, args: string[], timeout = 10000): Promise<string> {
   const { stdout } = await execFileAsync('git', args, { cwd, encoding: 'utf-8', timeout })
   return stdout.trim()
+}
+
+async function runGh(cwd: string, args: string[], timeout = 15000): Promise<string> {
+  const { stdout } = await execFileAsync('gh', args, { cwd, encoding: 'utf-8', timeout })
+  return stdout.trim()
+}
+
+function parseGitHubRemote(remoteUrl: string): { owner: string; name: string } | null {
+  // SSH: git@github.com:owner/repo.git
+  const sshMatch = remoteUrl.match(/github\.com[:/]([^/]+)\/([^/.]+?)(?:\.git)?$/)
+  if (sshMatch) return { owner: sshMatch[1], name: sshMatch[2] }
+  // HTTPS: https://github.com/owner/repo.git
+  const httpsMatch = remoteUrl.match(/github\.com\/([^/]+)\/([^/.]+?)(?:\.git)?$/)
+  if (httpsMatch) return { owner: httpsMatch[1], name: httpsMatch[2] }
+  return null
 }
 
 const GLOBAL_CONFIG_NAME = 'arnzen-config.json'
@@ -578,6 +594,104 @@ app.whenReady().then(() => {
   ipcMain.handle('git:push', async (_event, cwd: string): Promise<void> => {
     await runGit(cwd, ['push'], 30000)
   })
+
+  // IPC: GitHub operations (via gh CLI)
+  ipcMain.handle('gh:detect-repo', async (_event, cwd: string) => {
+    const remoteUrl = await runGit(cwd, ['remote', 'get-url', 'origin'])
+    const parsed = parseGitHubRemote(remoteUrl)
+    if (!parsed) throw new Error('Not a GitHub repository')
+    return parsed
+  })
+
+  ipcMain.handle(
+    'gh:list-issues',
+    async (_event, cwd: string, state: string, limit: number): Promise<GitHubIssue[]> => {
+      const json = await runGh(cwd, [
+        'issue', 'list',
+        '--state', state,
+        '--limit', String(limit),
+        '--json', 'number,title,body,state,author,labels,assignees,createdAt,updatedAt,comments,url'
+      ])
+      if (!json) return []
+      const raw = JSON.parse(json) as Array<Record<string, unknown>>
+      return raw.map((issue) => ({
+        number: issue.number as number,
+        title: issue.title as string,
+        body: issue.body as string,
+        state: (issue.state as string).toUpperCase() as 'OPEN' | 'CLOSED',
+        author: ((issue.author as Record<string, string>)?.login) ?? '',
+        labels: (issue.labels as Array<{ name: string; color: string }>) ?? [],
+        assignees: ((issue.assignees as Array<{ login: string }>) ?? []).map((a) => a.login),
+        createdAt: issue.createdAt as string,
+        updatedAt: issue.updatedAt as string,
+        commentsCount: Array.isArray(issue.comments) ? (issue.comments as unknown[]).length : 0,
+        url: issue.url as string
+      }))
+    }
+  )
+
+  ipcMain.handle(
+    'gh:create-issue',
+    async (_event, cwd: string, title: string, body: string) => {
+      const args = ['issue', 'create', '--title', title]
+      if (body) args.push('--body', body)
+      const url = await runGh(cwd, args, 30000)
+      // gh issue create prints the URL, e.g. https://github.com/owner/repo/issues/42
+      const numberMatch = url.match(/\/issues\/(\d+)/)
+      return { number: numberMatch ? parseInt(numberMatch[1], 10) : 0, url }
+    }
+  )
+
+  ipcMain.handle(
+    'gh:get-issue',
+    async (_event, cwd: string, issueNumber: number) => {
+      const json = await runGh(cwd, [
+        'issue', 'view', String(issueNumber),
+        '--json', 'number,title,body,state,author,labels,assignees,milestone,createdAt,updatedAt,comments,url'
+      ])
+      const issue = JSON.parse(json) as Record<string, unknown>
+      const comments = (issue.comments as Array<Record<string, unknown>> ?? []).map((c) => ({
+        id: c.id as number,
+        author: ((c.author as Record<string, string>)?.login) ?? '',
+        body: c.body as string,
+        createdAt: c.createdAt as string
+      }))
+      return {
+        number: issue.number as number,
+        title: issue.title as string,
+        body: issue.body as string,
+        state: (issue.state as string).toUpperCase() as 'OPEN' | 'CLOSED',
+        author: ((issue.author as Record<string, string>)?.login) ?? '',
+        labels: (issue.labels as Array<{ name: string; color: string }>) ?? [],
+        assignees: ((issue.assignees as Array<{ login: string }>) ?? []).map((a) => a.login),
+        milestone: ((issue.milestone as Record<string, string>)?.title) ?? null,
+        createdAt: issue.createdAt as string,
+        updatedAt: issue.updatedAt as string,
+        commentsCount: comments.length,
+        url: issue.url as string,
+        comments
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'gh:add-comment',
+    async (_event, cwd: string, issueNumber: number, body: string) => {
+      await runGh(cwd, ['issue', 'comment', String(issueNumber), '--body', body], 30000)
+    }
+  )
+
+  ipcMain.handle(
+    'gh:create-pr',
+    async (_event, cwd: string, title: string, body: string) => {
+      const url = await runGh(
+        cwd,
+        ['pr', 'create', '--title', title, '--body', body],
+        60000
+      )
+      return { url: url.trim() }
+    }
+  )
 
   // IPC: Read directory listing (for editor file tree)
   const FILTERED_NAMES = new Set(['.git', 'node_modules', '.DS_Store', 'Thumbs.db', '.arnzen'])

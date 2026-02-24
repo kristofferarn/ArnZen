@@ -1,5 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
-import { DirEntry, GitStatusDetailResult, GitStatusResult, GlobalConfig, Project } from '../shared/types'
+import { DirEntry, GitHubIssue, GitHubIssueComment, GitStatusDetailResult, GitStatusResult, GlobalConfig, Project } from '../shared/types'
 
 interface ArnZenAPI {
   loadProjects: () => Promise<{ projects: Project[]; lastActiveProjectId: string | null }>
@@ -37,6 +37,14 @@ interface ArnZenAPI {
   gitDiscard: (cwd: string, paths: string[]) => Promise<void>
   gitCommit: (cwd: string, message: string) => Promise<void>
   gitPush: (cwd: string) => Promise<void>
+
+  // GitHub (via gh CLI)
+  ghDetectRepo: (cwd: string) => Promise<{ owner: string; name: string }>
+  ghListIssues: (cwd: string, state: string, limit: number) => Promise<GitHubIssue[]>
+  ghCreateIssue: (cwd: string, title: string, body: string) => Promise<{ number: number; url: string }>
+  ghGetIssue: (cwd: string, issueNumber: number) => Promise<GitHubIssue & { comments: GitHubIssueComment[]; milestone: string | null }>
+  ghAddComment: (cwd: string, issueNumber: number, body: string) => Promise<void>
+  ghCreatePr: (cwd: string, title: string, body: string) => Promise<{ url: string }>
 
   // Filesystem (editor)
   readDir: (dirPath: string) => Promise<DirEntry[]>

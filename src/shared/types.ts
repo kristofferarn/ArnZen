@@ -62,6 +62,29 @@ export interface GitStatusDetailResult {
   files: GitFileStatus[]
 }
 
+// ── GitHub issue types ──
+
+export interface GitHubIssue {
+  number: number
+  title: string
+  body: string
+  state: 'OPEN' | 'CLOSED'
+  author: string
+  labels: { name: string; color: string }[]
+  assignees: string[]
+  createdAt: string
+  updatedAt: string
+  commentsCount: number
+  url: string
+}
+
+export interface GitHubIssueComment {
+  id: number
+  author: string
+  body: string
+  createdAt: string
+}
+
 // ── Terminal types ──
 
 export interface TerminalInstanceState {
