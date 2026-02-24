@@ -642,8 +642,7 @@ app.whenReady().then(() => {
   ipcMain.handle(
     'gh:create-issue',
     async (_event, cwd: string, title: string, body: string) => {
-      const args = ['issue', 'create', '--title', title]
-      if (body) args.push('--body', body)
+      const args = ['issue', 'create', '--title', title, '--body', body || '']
       const url = await runGh(cwd, args, 30000)
       // gh issue create prints the URL, e.g. https://github.com/owner/repo/issues/42
       const numberMatch = url.match(/\/issues\/(\d+)/)
