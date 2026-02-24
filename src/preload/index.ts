@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import { GlobalConfig, Project } from '../shared/types'
+import { GitStatusResult, GlobalConfig, Project } from '../shared/types'
 
 const api = {
   loadProjects: (): Promise<{ projects: Project[]; lastActiveProjectId: string | null }> =>
@@ -36,7 +36,25 @@ const api = {
     return () => {
       ipcRenderer.removeListener('terminal:exit', handler)
     }
-  }
+  },
+
+  // Git
+  gitIsRepo: (cwd: string): Promise<boolean> =>
+    ipcRenderer.invoke('git:is-repo', cwd),
+  gitStatus: (cwd: string): Promise<GitStatusResult> =>
+    ipcRenderer.invoke('git:status', cwd),
+  gitBranches: (cwd: string): Promise<string[]> =>
+    ipcRenderer.invoke('git:branches', cwd),
+  gitCheckout: (cwd: string, branch: string): Promise<void> =>
+    ipcRenderer.invoke('git:checkout', cwd, branch),
+  gitCreateBranch: (cwd: string, branch: string): Promise<void> =>
+    ipcRenderer.invoke('git:create-branch', cwd, branch),
+  gitDeleteBranch: (cwd: string, branch: string): Promise<void> =>
+    ipcRenderer.invoke('git:delete-branch', cwd, branch),
+  gitFetch: (cwd: string): Promise<void> =>
+    ipcRenderer.invoke('git:fetch', cwd),
+  gitPull: (cwd: string): Promise<void> =>
+    ipcRenderer.invoke('git:pull', cwd)
 }
 
 if (process.contextIsolated) {

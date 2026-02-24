@@ -3,6 +3,7 @@ import { FolderOpen, Plus, X, Play, Square, ChevronDown, Pencil } from 'lucide-r
 import { useWorkspaceStore, useActiveProject } from '../stores/workspace-store'
 import { widgetRegistry, terminalPresets, getBaseType } from '../stores/widget-registry'
 import { useDevServerStore } from '../stores/devserver-store'
+import { GitBranchMenu } from './GitBranchMenu'
 import { DEV_SERVER_SUFFIX, DEV_SERVER_PANEL_ID, getMosaicLeaves } from '../../../shared/types'
 
 export function Toolbar(): React.JSX.Element {
@@ -275,6 +276,12 @@ export function Toolbar(): React.JSX.Element {
           </div>
         )}
       </div>
+
+      {/* Divider */}
+      <div className="w-px h-4 bg-[var(--color-border)]" />
+
+      {/* Git branch */}
+      <GitBranchMenu />
 
       {/* Divider */}
       <div className="w-px h-4 bg-[var(--color-border)]" />

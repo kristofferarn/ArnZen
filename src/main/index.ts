@@ -1,10 +1,13 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
+import { execFile } from 'child_process'
+import { promisify } from 'util'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/logo_transparent.png?asset'
 import {
   DEFAULT_PROJECT_SETTINGS,
+  GitStatusResult,
   GlobalConfig,
   Project,
   WidgetLayout,
@@ -14,6 +17,13 @@ import {
 } from '../shared/types'
 import { v4 as uuid } from 'uuid'
 import * as pty from 'node-pty'
+
+const execFileAsync = promisify(execFile)
+
+async function runGit(cwd: string, args: string[]): Promise<string> {
+  const { stdout } = await execFileAsync('git', args, { cwd, encoding: 'utf-8', timeout: 10000 })
+  return stdout.trim()
+}
 
 const GLOBAL_CONFIG_NAME = 'arnzen-config.json'
 
@@ -400,6 +410,66 @@ app.whenReady().then(() => {
       ptyBuffers.delete(id)
       ptyScrollbacks.delete(id)
     }
+  })
+
+  // IPC: Git operations
+  ipcMain.handle('git:is-repo', async (_event, cwd: string): Promise<boolean> => {
+    try {
+      const result = await runGit(cwd, ['rev-parse', '--is-inside-work-tree'])
+      return result === 'true'
+    } catch {
+      return false
+    }
+  })
+
+  ipcMain.handle('git:status', async (_event, cwd: string): Promise<GitStatusResult> => {
+    let branch = ''
+    let detached = false
+    try {
+      branch = await runGit(cwd, ['symbolic-ref', '--short', 'HEAD'])
+    } catch {
+      // Detached HEAD — get short SHA
+      detached = true
+      try {
+        branch = await runGit(cwd, ['rev-parse', '--short', 'HEAD'])
+      } catch {
+        branch = 'unknown'
+      }
+    }
+    let dirty = false
+    try {
+      const porcelain = await runGit(cwd, ['status', '--porcelain'])
+      dirty = porcelain.length > 0
+    } catch {
+      // If status fails, assume not dirty
+    }
+    return { branch, detached, dirty }
+  })
+
+  ipcMain.handle('git:branches', async (_event, cwd: string): Promise<string[]> => {
+    const output = await runGit(cwd, ['branch', '--format=%(refname:short)'])
+    if (!output) return []
+    return output.split('\n').filter(Boolean)
+  })
+
+  ipcMain.handle('git:checkout', async (_event, cwd: string, branch: string): Promise<void> => {
+    await runGit(cwd, ['checkout', branch])
+  })
+
+  ipcMain.handle('git:create-branch', async (_event, cwd: string, branch: string): Promise<void> => {
+    await runGit(cwd, ['checkout', '-b', branch])
+  })
+
+  ipcMain.handle('git:delete-branch', async (_event, cwd: string, branch: string): Promise<void> => {
+    await runGit(cwd, ['branch', '-d', branch])
+  })
+
+  ipcMain.handle('git:fetch', async (_event, cwd: string): Promise<void> => {
+    await runGit(cwd, ['fetch', '--prune'])
+  })
+
+  ipcMain.handle('git:pull', async (_event, cwd: string): Promise<void> => {
+    await runGit(cwd, ['pull'])
   })
 
   createWindow()

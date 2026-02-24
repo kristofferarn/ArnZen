@@ -1,5 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
-import { GlobalConfig, Project } from '../shared/types'
+import { GitStatusResult, GlobalConfig, Project } from '../shared/types'
 
 interface ArnZenAPI {
   loadProjects: () => Promise<{ projects: Project[]; lastActiveProjectId: string | null }>
@@ -18,6 +18,16 @@ interface ArnZenAPI {
   terminalKill: (id: string) => void
   onTerminalOutput: (callback: (id: string, data: string) => void) => () => void
   onTerminalExit: (callback: (id: string) => void) => () => void
+
+  // Git
+  gitIsRepo: (cwd: string) => Promise<boolean>
+  gitStatus: (cwd: string) => Promise<GitStatusResult>
+  gitBranches: (cwd: string) => Promise<string[]>
+  gitCheckout: (cwd: string, branch: string) => Promise<void>
+  gitCreateBranch: (cwd: string, branch: string) => Promise<void>
+  gitDeleteBranch: (cwd: string, branch: string) => Promise<void>
+  gitFetch: (cwd: string) => Promise<void>
+  gitPull: (cwd: string) => Promise<void>
 }
 
 declare global {

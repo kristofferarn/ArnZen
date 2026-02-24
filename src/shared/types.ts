@@ -28,6 +28,14 @@ export const TASK_PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: 
   high: { label: 'High', color: '#c97070' }
 }
 
+// ── Git types ──
+
+export interface GitStatusResult {
+  branch: string
+  detached: boolean
+  dirty: boolean
+}
+
 // ── Terminal types ──
 
 export interface TerminalInstanceState {
