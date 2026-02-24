@@ -11,6 +11,7 @@ import {
   DirEntry,
   GitFileStatus,
   GitHubIssue,
+  GitHubLabel,
   GitHubPR,
   GitHubPRDetail,
   PRMergeMethod,
@@ -689,12 +690,31 @@ app.whenReady().then(() => {
     return json.trim()
   })
 
+  ipcMain.handle('gh:list-labels', async (_event, cwd: string): Promise<GitHubLabel[]> => {
+    const json = await runGh(cwd, ['label', 'list', '--json', 'name,color,description', '--limit', '100'])
+    if (!json) return []
+    return JSON.parse(json) as GitHubLabel[]
+  })
+
+  ipcMain.handle(
+    'gh:edit-pr-labels',
+    async (_event, cwd: string, prNumber: number, add: string[], remove: string[]): Promise<void> => {
+      const args = ['pr', 'edit', String(prNumber)]
+      for (const label of add) args.push('--add-label', label)
+      for (const label of remove) args.push('--remove-label', label)
+      await runGh(cwd, args, 30000)
+    }
+  )
+
   ipcMain.handle(
     'gh:create-pr',
-    async (_event, cwd: string, title: string, body: string, head?: string, base?: string) => {
+    async (_event, cwd: string, title: string, body: string, head?: string, base?: string, labels?: string[]) => {
       const args = ['pr', 'create', '--title', title, '--body', body]
       if (head) args.push('--head', head)
       if (base) args.push('--base', base)
+      if (labels) {
+        for (const label of labels) args.push('--label', label)
+      }
       const url = await runGh(cwd, args, 60000)
       return { url: url.trim() }
     }

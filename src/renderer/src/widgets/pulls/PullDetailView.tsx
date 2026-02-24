@@ -4,8 +4,9 @@ import {
   X, RefreshCw, Loader2, AlertCircle, ExternalLink, Bot, GitBranch, GitMerge,
   Check, Circle, Eye, ChevronDown, ChevronRight, XCircle
 } from 'lucide-react'
-import { GitHubPRDetail, PRMergeMethod, PRCheckStatus } from '../../../../shared/types'
+import { GitHubLabel, GitHubPRDetail, PRMergeMethod, PRCheckStatus } from '../../../../shared/types'
 import { PullComment } from './PullComment'
+import { LabelPicker, LabelBadges } from './LabelPicker'
 
 interface PullDetailViewProps {
   pr: GitHubPRDetail
@@ -13,12 +14,16 @@ interface PullDetailViewProps {
   addingComment: boolean
   merging: boolean
   error: string | null
+  repoLabels: GitHubLabel[]
+  loadingLabels: boolean
   onClose: () => void
   onAddComment: (body: string) => void
   onRefresh: () => void
   onMerge: (method: PRMergeMethod, deleteBranch?: boolean) => void
   onClosePR: () => void
   onReviewWithClaude: (label: string, initialCommand: string) => void
+  onFetchLabels: () => void
+  onEditLabels: (add: string[], remove: string[]) => void
 }
 
 function CIStatusSummary({ checks }: { checks: PRCheckStatus[] }): React.JSX.Element | null {
@@ -56,12 +61,16 @@ export function PullDetailView({
   addingComment,
   merging,
   error,
+  repoLabels,
+  loadingLabels,
   onClose,
   onAddComment,
   onRefresh,
   onMerge,
   onClosePR,
-  onReviewWithClaude
+  onReviewWithClaude,
+  onFetchLabels,
+  onEditLabels
 }: PullDetailViewProps): React.JSX.Element {
   const [commentBody, setCommentBody] = useState('')
   const [showMergeMenu, setShowMergeMenu] = useState(false)
@@ -346,22 +355,24 @@ export function PullDetailView({
           )}
 
           {/* Labels */}
-          {pr.labels.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {pr.labels.map((label) => (
-                <span
-                  key={label.name}
-                  className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] mono leading-relaxed"
-                  style={{
-                    backgroundColor: `#${label.color}22`,
-                    color: `#${label.color}`
-                  }}
-                >
-                  {label.name}
-                </span>
-              ))}
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <LabelBadges
+              labels={pr.labels}
+              onRemove={isOpen ? (name) => onEditLabels([], [name]) : undefined}
+            />
+            {isOpen && (
+              <LabelPicker
+                repoLabels={repoLabels}
+                selected={pr.labels.map((l) => l.name)}
+                loading={loadingLabels}
+                onToggle={(name) => {
+                  const has = pr.labels.some((l) => l.name === name)
+                  onEditLabels(has ? [] : [name], has ? [name] : [])
+                }}
+                onOpen={onFetchLabels}
+              />
+            )}
+          </div>
         </div>
 
         {/* Scrollable content */}
