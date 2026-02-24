@@ -4,6 +4,7 @@ import { FitAddon } from '@xterm/addon-fit'
 import { WebglAddon } from '@xterm/addon-webgl'
 import { useActiveProject, useWorkspaceStore } from '../stores/workspace-store'
 import { getInstanceSuffix } from '../stores/widget-registry'
+import { attachClipboardHandler } from '../lib/terminal-clipboard'
 import type { ITheme } from '@xterm/xterm'
 
 const defaultTheme: ITheme = {
@@ -104,6 +105,8 @@ export function TerminalWidget({ instanceId }: TerminalWidgetProps): React.JSX.E
     fitAddonRef.current = fitAddon
 
     terminal.open(containerRef.current)
+
+    attachClipboardHandler(terminal)
 
     // Try loading WebGL addon for GPU-accelerated rendering
     try {

@@ -78,10 +78,11 @@ export const useSourceControlStore = create<SourceControlState>((set, get) => ({
 
   refresh: async (projectId, rootPath) => {
     const current = getInfo(get(), projectId)
+    const isFirstLoad = !get().projects[projectId]
     set((s) => ({
       projects: {
         ...s.projects,
-        [projectId]: { ...current, loading: true, error: null }
+        [projectId]: { ...current, loading: isFirstLoad, error: null }
       }
     }))
 

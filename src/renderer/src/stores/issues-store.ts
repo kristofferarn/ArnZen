@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { GitHubIssue, GitHubIssueComment } from '../../../shared/types'
+import { GitHubIssue, GitHubIssueComment, GitHubLabel } from '../../../shared/types'
 
 export type IssueStateFilter = 'open' | 'closed' | 'all'
 
@@ -21,6 +21,9 @@ interface IssuesInfo {
   creating: boolean
   error: string | null
   filter: IssuesFilter
+  // Labels
+  repoLabels: GitHubLabel[]
+  loadingLabels: boolean
   // Detail view
   selectedIssue: number | null
   issueDetail: IssueDetail | null
@@ -36,6 +39,8 @@ const DEFAULT_ISSUES: IssuesInfo = {
   creating: false,
   error: null,
   filter: { search: '', state: 'open' },
+  repoLabels: [],
+  loadingLabels: false,
   selectedIssue: null,
   issueDetail: null,
   loadingDetail: false,
@@ -47,11 +52,13 @@ interface IssuesState {
 
   detectRepo: (projectId: string, rootPath: string) => Promise<void>
   refresh: (projectId: string, rootPath: string) => Promise<void>
-  createIssue: (projectId: string, rootPath: string, title: string, body: string) => Promise<void>
+  createIssue: (projectId: string, rootPath: string, title: string, body: string, labels?: string[]) => Promise<void>
   setFilter: (projectId: string, filter: Partial<IssuesFilter>) => void
   selectIssue: (projectId: string, rootPath: string, issueNumber: number) => Promise<void>
   deselectIssue: (projectId: string) => void
   addComment: (projectId: string, rootPath: string, issueNumber: number, body: string) => Promise<void>
+  fetchLabels: (projectId: string, rootPath: string) => Promise<void>
+  editIssueLabels: (projectId: string, rootPath: string, issueNumber: number, add: string[], remove: string[]) => Promise<void>
   clear: (projectId: string) => void
 }
 
@@ -120,7 +127,7 @@ export const useIssuesStore = create<IssuesState>((set, get) => ({
     }
   },
 
-  createIssue: async (projectId, rootPath, title, body) => {
+  createIssue: async (projectId, rootPath, title, body, labels) => {
     set((s) => ({
       projects: {
         ...s.projects,
@@ -129,7 +136,7 @@ export const useIssuesStore = create<IssuesState>((set, get) => ({
     }))
 
     try {
-      await window.api.ghCreateIssue(rootPath, title, body)
+      await window.api.ghCreateIssue(rootPath, title, body, labels)
       set((s) => ({
         projects: {
           ...s.projects,
@@ -249,6 +256,51 @@ export const useIssuesStore = create<IssuesState>((set, get) => ({
           [projectId]: {
             ...getInfo(s, projectId),
             addingComment: false,
+            error: err instanceof Error ? err.message : String(err)
+          }
+        }
+      }))
+    }
+  },
+
+  fetchLabels: async (projectId, rootPath) => {
+    const current = getInfo(get(), projectId)
+    if (current.repoLabels.length > 0 || current.loadingLabels) return
+    set((s) => ({
+      projects: {
+        ...s.projects,
+        [projectId]: { ...getInfo(s, projectId), loadingLabels: true }
+      }
+    }))
+    try {
+      const labels = await window.api.ghListLabels(rootPath)
+      set((s) => ({
+        projects: {
+          ...s.projects,
+          [projectId]: { ...getInfo(s, projectId), repoLabels: labels, loadingLabels: false }
+        }
+      }))
+    } catch {
+      set((s) => ({
+        projects: {
+          ...s.projects,
+          [projectId]: { ...getInfo(s, projectId), loadingLabels: false }
+        }
+      }))
+    }
+  },
+
+  editIssueLabels: async (projectId, rootPath, issueNumber, add, remove) => {
+    try {
+      await window.api.ghEditIssueLabels(rootPath, issueNumber, add, remove)
+      await get().selectIssue(projectId, rootPath, issueNumber)
+      await get().refresh(projectId, rootPath)
+    } catch (err) {
+      set((s) => ({
+        projects: {
+          ...s.projects,
+          [projectId]: {
+            ...getInfo(s, projectId),
             error: err instanceof Error ? err.message : String(err)
           }
         }

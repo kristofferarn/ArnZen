@@ -1,14 +1,19 @@
 import { useState, useMemo, useEffect } from 'react'
 import { X, Loader2, ChevronDown } from 'lucide-react'
+import { GitHubLabel } from '../../../../shared/types'
 import { parseBranchForPR } from '../issues/assign-to-claude'
+import { LabelPicker, LabelBadges } from './LabelPicker'
 
 interface PullCreateFormProps {
   creating: boolean
   currentBranch?: string
   defaultBranch?: string
   branches: string[]
-  onSubmit: (title: string, body: string, head: string, base: string) => void
+  repoLabels: GitHubLabel[]
+  loadingLabels: boolean
+  onSubmit: (title: string, body: string, head: string, base: string, labels: string[]) => void
   onCancel: () => void
+  onFetchLabels: () => void
 }
 
 export function PullCreateForm({
@@ -16,25 +21,38 @@ export function PullCreateForm({
   currentBranch,
   defaultBranch,
   branches,
+  repoLabels,
+  loadingLabels,
   onSubmit,
-  onCancel
+  onCancel,
+  onFetchLabels
 }: PullCreateFormProps): React.JSX.Element {
   const defaults = useMemo(() => parseBranchForPR(currentBranch ?? ''), [currentBranch])
   const [title, setTitle] = useState(defaults.title)
   const [body, setBody] = useState(defaults.body)
   const [head, setHead] = useState(currentBranch ?? '')
   const [base, setBase] = useState(defaultBranch ?? '')
+  const suggestedTitle = head && base ? `merge ${head} into ${base}` : ''
   const [userChangedBase, setUserChangedBase] = useState(false)
+  const [selectedLabels, setSelectedLabels] = useState<string[]>([])
 
   useEffect(() => {
     if (defaultBranch && !userChangedBase) setBase(defaultBranch)
   }, [defaultBranch, userChangedBase])
 
   const handleSubmit = (): void => {
-    const trimmed = title.trim()
-    if (!trimmed || creating) return
-    onSubmit(trimmed, body.trim(), head, base)
+    const effective = title.trim() || suggestedTitle
+    if (!effective || creating) return
+    onSubmit(effective, body.trim(), head, base, selectedLabels)
   }
+
+  const handleToggleLabel = (name: string): void => {
+    setSelectedLabels((prev) =>
+      prev.includes(name) ? prev.filter((l) => l !== name) : [...prev, name]
+    )
+  }
+
+  const selectedLabelObjects = repoLabels.filter((l) => selectedLabels.includes(l.name))
 
   return (
     <div className="px-3 py-3 border-b border-[var(--color-border)] space-y-2">
@@ -61,7 +79,7 @@ export function PullCreateForm({
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSubmit()}
-        placeholder="PR title"
+        placeholder={suggestedTitle || 'PR title'}
         autoFocus
         className="w-full bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] text-sm px-3 py-2 rounded-md border border-[var(--color-border)] outline-none focus:border-[var(--color-accent)]/50 transition-colors duration-150 placeholder:text-[var(--color-text-muted)]"
       />
@@ -72,10 +90,19 @@ export function PullCreateForm({
         rows={3}
         className="w-full bg-[var(--color-bg-tertiary)] text-sm text-[var(--color-text-primary)] px-3 py-2 rounded-md border border-[var(--color-border)] outline-none resize-none focus:border-[var(--color-accent)]/40 transition-colors duration-150 placeholder:text-[var(--color-text-muted)]"
       />
-      <div className="flex justify-end">
+      <LabelBadges labels={selectedLabelObjects} onRemove={handleToggleLabel} />
+
+      <div className="flex items-center justify-between">
+        <LabelPicker
+          repoLabels={repoLabels}
+          selected={selectedLabels}
+          loading={loadingLabels}
+          onToggle={handleToggleLabel}
+          onOpen={onFetchLabels}
+        />
         <button
           onClick={handleSubmit}
-          disabled={!title.trim() || creating}
+          disabled={(!title.trim() && !suggestedTitle) || creating}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-bg-deep)] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {creating && <Loader2 size={12} className="animate-spin" />}

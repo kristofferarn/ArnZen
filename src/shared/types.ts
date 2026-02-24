@@ -85,6 +85,12 @@ export interface GitHubIssueComment {
   createdAt: string
 }
 
+export interface GitHubLabel {
+  name: string
+  color: string
+  description: string
+}
+
 // ── GitHub PR types ──
 
 export type PRReviewDecision = 'APPROVED' | 'CHANGES_REQUESTED' | 'REVIEW_REQUIRED' | ''

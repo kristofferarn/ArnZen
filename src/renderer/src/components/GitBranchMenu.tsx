@@ -26,19 +26,41 @@ export function GitBranchMenu(): React.JSX.Element {
     doRefresh()
   }, [doRefresh])
 
-  // Polling: 5s normally, 2s when dropdown open
+  // Polling: 5s normally, 2s when dropdown open; pause on blur, resume on focus
+  const branchIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
   useEffect(() => {
     if (!project) return
-    const interval = setInterval(doRefresh, open ? 2000 : 5000)
-    return () => clearInterval(interval)
-  }, [project?.id, open, doRefresh])
 
-  // Refresh on window focus
-  useEffect(() => {
-    const handler = (): void => doRefresh()
-    window.addEventListener('focus', handler)
-    return () => window.removeEventListener('focus', handler)
-  }, [doRefresh])
+    const delay = open ? 2000 : 5000
+
+    const startPolling = (): void => {
+      if (branchIntervalRef.current) clearInterval(branchIntervalRef.current)
+      branchIntervalRef.current = setInterval(doRefresh, delay)
+    }
+
+    const stopPolling = (): void => {
+      if (branchIntervalRef.current) {
+        clearInterval(branchIntervalRef.current)
+        branchIntervalRef.current = null
+      }
+    }
+
+    const handleFocus = (): void => {
+      doRefresh()
+      startPolling()
+    }
+
+    if (document.hasFocus()) startPolling()
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('blur', stopPolling)
+
+    return () => {
+      stopPolling()
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('blur', stopPolling)
+    }
+  }, [project?.id, open, doRefresh])
 
   // Close menu on outside click
   useEffect(() => {
