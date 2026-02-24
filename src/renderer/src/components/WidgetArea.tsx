@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, ComponentType } from 'react'
 import { Mosaic, MosaicWindow, MosaicNode } from 'react-mosaic-component'
 import { FolderOpen, Minus, X } from 'lucide-react'
 import { useActiveProject, useWorkspaceStore } from '../stores/workspace-store'
@@ -124,17 +124,39 @@ export function WidgetArea(): React.JSX.Element {
   const { mosaic } = project.layout
 
   if (mosaic === null) {
-    const descriptions: Record<string, string> = {
-      todo: 'Track tasks and stay organized',
-      'source-control': 'Stage, commit, and push changes',
-      issues: 'Track and manage GitHub issues',
-      terminal: 'Run commands in your project'
-    }
-
-    const availableWidgets = widgetRegistry.filter((w) => {
-      if (w.allowMultiple) return true
-      return !project.layout.minimized.some((p) => getBaseType(p) === w.id)
-    })
+    const suggestedWidgets: {
+      label: string
+      icon: ComponentType<{ size?: number; className?: string }>
+      color: string
+      description: string
+      action: () => void
+    }[] = [
+      {
+        label: 'Source Control',
+        icon: widgetRegistry.find((w) => w.id === 'source-control')!.icon,
+        color: widgetRegistry.find((w) => w.id === 'source-control')!.color,
+        description: 'Stage, commit, and push changes',
+        action: () => addPanel('source-control')
+      },
+      {
+        label: 'Issues',
+        icon: widgetRegistry.find((w) => w.id === 'issues')!.icon,
+        color: widgetRegistry.find((w) => w.id === 'issues')!.color,
+        description: 'Track and manage GitHub issues',
+        action: () => addPanel('issues')
+      },
+      {
+        label: terminalPresets[0].label,
+        icon: terminalPresets[0].icon,
+        color: terminalPresets[0].color,
+        description: 'AI-powered coding assistant',
+        action: () =>
+          addPanel('terminal', {
+            label: terminalPresets[0].label,
+            initialCommand: terminalPresets[0].initialCommand
+          })
+      }
+    ]
 
     return (
       <div className="flex flex-col h-full">
@@ -148,12 +170,12 @@ export function WidgetArea(): React.JSX.Element {
             </p>
           </div>
           <div className="flex flex-wrap justify-center gap-3 px-6 max-w-lg">
-            {availableWidgets.map((w) => {
+            {suggestedWidgets.map((w) => {
               const Icon = w.icon
               return (
                 <button
-                  key={w.id}
-                  onClick={() => addPanel(w.id)}
+                  key={w.label}
+                  onClick={w.action}
                   className="group flex flex-col items-center gap-3 w-36 p-5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] hover:bg-[var(--color-surface-raised)] hover:border-[var(--color-border-strong)] transition-colors duration-150"
                 >
                   <div
@@ -167,37 +189,7 @@ export function WidgetArea(): React.JSX.Element {
                       {w.label}
                     </p>
                     <p className="text-xs mt-0.5 text-[var(--color-text-muted)]">
-                      {descriptions[w.id] || ''}
-                    </p>
-                  </div>
-                </button>
-              )
-            })}
-            {terminalPresets.map((preset) => {
-              const PresetIcon = preset.icon
-              return (
-                <button
-                  key={preset.label}
-                  onClick={() =>
-                    addPanel('terminal', {
-                      label: preset.label,
-                      initialCommand: preset.initialCommand
-                    })
-                  }
-                  className="group flex flex-col items-center gap-3 w-36 p-5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] hover:bg-[var(--color-surface-raised)] hover:border-[var(--color-border-strong)] transition-colors duration-150"
-                >
-                  <div
-                    className="p-3 rounded-md bg-[var(--color-bg-tertiary)] transition-colors duration-150"
-                    style={{ color: preset.color }}
-                  >
-                    <PresetIcon size={24} />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-[var(--color-text-primary)]">
-                      {preset.label}
-                    </p>
-                    <p className="text-xs mt-0.5 text-[var(--color-text-muted)]">
-                      AI-powered coding assistant
+                      {w.description}
                     </p>
                   </div>
                 </button>
