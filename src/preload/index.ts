@@ -78,12 +78,14 @@ const api = {
     ipcRenderer.invoke('gh:detect-repo', cwd),
   ghListIssues: (cwd: string, state: string, limit: number): Promise<GitHubIssue[]> =>
     ipcRenderer.invoke('gh:list-issues', cwd, state, limit),
-  ghCreateIssue: (cwd: string, title: string, body: string): Promise<{ number: number; url: string }> =>
-    ipcRenderer.invoke('gh:create-issue', cwd, title, body),
+  ghCreateIssue: (cwd: string, title: string, body: string, labels?: string[]): Promise<{ number: number; url: string }> =>
+    ipcRenderer.invoke('gh:create-issue', cwd, title, body, labels),
   ghGetIssue: (cwd: string, issueNumber: number): Promise<GitHubIssue & { comments: GitHubIssueComment[]; milestone: string | null }> =>
     ipcRenderer.invoke('gh:get-issue', cwd, issueNumber),
   ghAddComment: (cwd: string, issueNumber: number, body: string): Promise<void> =>
     ipcRenderer.invoke('gh:add-comment', cwd, issueNumber, body),
+  ghEditIssueLabels: (cwd: string, issueNumber: number, add: string[], remove: string[]): Promise<void> =>
+    ipcRenderer.invoke('gh:edit-issue-labels', cwd, issueNumber, add, remove),
   ghDefaultBranch: (cwd: string): Promise<string> =>
     ipcRenderer.invoke('gh:default-branch', cwd),
   ghListLabels: (cwd: string): Promise<GitHubLabel[]> =>

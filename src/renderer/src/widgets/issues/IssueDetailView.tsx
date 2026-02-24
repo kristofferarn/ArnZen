@@ -1,9 +1,10 @@
 import { useState, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { X, RefreshCw, Loader2, AlertCircle, ExternalLink, Bot, GitPullRequest } from 'lucide-react'
-import { GitHubIssue, GitHubIssueComment } from '../../../../shared/types'
+import { GitHubIssue, GitHubIssueComment, GitHubLabel } from '../../../../shared/types'
 import { IssueComment } from './IssueComment'
 import { issueBranchName, issuePrTitle, claudeIssueCommand } from './assign-to-claude'
+import { LabelPicker, LabelBadges } from '../pulls/LabelPicker'
 
 export function branchMatchesIssue(branch: string, issueNumber: number): boolean {
   // Match patterns like feat/42-..., fix/42-..., issue-42-..., #42, or number preceded by separator
@@ -24,10 +25,14 @@ interface IssueDetailViewProps {
   error: string | null
   rootPath: string
   currentBranch: string
+  repoLabels: GitHubLabel[]
+  loadingLabels: boolean
   onClose: () => void
   onAddComment: (body: string) => void
   onRefresh: () => void
   onAssignToClaude: (label: string, initialCommand: string) => void
+  onEditLabels: (add: string[], remove: string[]) => void
+  onFetchLabels: () => void
 }
 
 export function IssueDetailView({
@@ -37,10 +42,14 @@ export function IssueDetailView({
   error,
   rootPath,
   currentBranch,
+  repoLabels,
+  loadingLabels,
   onClose,
   onAddComment,
   onRefresh,
-  onAssignToClaude
+  onAssignToClaude,
+  onEditLabels,
+  onFetchLabels
 }: IssueDetailViewProps): React.JSX.Element {
   const [commentBody, setCommentBody] = useState('')
   const [assigning, setAssigning] = useState(false)
@@ -216,22 +225,24 @@ export function IssueDetailView({
           </div>
 
           {/* Labels */}
-          {issue.labels.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {issue.labels.map((label) => (
-                <span
-                  key={label.name}
-                  className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] mono leading-relaxed"
-                  style={{
-                    backgroundColor: `#${label.color}22`,
-                    color: `#${label.color}`
-                  }}
-                >
-                  {label.name}
-                </span>
-              ))}
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-1.5">
+            <LabelBadges
+              labels={issue.labels}
+              onRemove={isOpen ? (name) => onEditLabels([], [name]) : undefined}
+            />
+            {isOpen && (
+              <LabelPicker
+                repoLabels={repoLabels}
+                selected={issue.labels.map((l) => l.name)}
+                loading={loadingLabels}
+                onToggle={(name) => {
+                  const has = issue.labels.some((l) => l.name === name)
+                  onEditLabels(has ? [] : [name], has ? [name] : [])
+                }}
+                onOpen={onFetchLabels}
+              />
+            )}
+          </div>
         </div>
 
         {/* Scrollable content */}

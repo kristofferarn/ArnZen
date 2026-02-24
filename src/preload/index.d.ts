@@ -1,5 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
-import { DirEntry, GitHubIssue, GitHubIssueComment, GitHubPR, GitHubPRDetail, PRMergeMethod, GitStatusDetailResult, GitStatusResult, GlobalConfig, Project } from '../shared/types'
+import { DirEntry, GitHubIssue, GitHubIssueComment, GitHubLabel, GitHubPR, GitHubPRDetail, PRMergeMethod, GitStatusDetailResult, GitStatusResult, GlobalConfig, Project } from '../shared/types'
 
 interface ArnZenAPI {
   loadProjects: () => Promise<{ projects: Project[]; lastActiveProjectId: string | null }>
@@ -41,11 +41,14 @@ interface ArnZenAPI {
   // GitHub (via gh CLI)
   ghDetectRepo: (cwd: string) => Promise<{ owner: string; name: string }>
   ghListIssues: (cwd: string, state: string, limit: number) => Promise<GitHubIssue[]>
-  ghCreateIssue: (cwd: string, title: string, body: string) => Promise<{ number: number; url: string }>
+  ghCreateIssue: (cwd: string, title: string, body: string, labels?: string[]) => Promise<{ number: number; url: string }>
   ghGetIssue: (cwd: string, issueNumber: number) => Promise<GitHubIssue & { comments: GitHubIssueComment[]; milestone: string | null }>
   ghAddComment: (cwd: string, issueNumber: number, body: string) => Promise<void>
+  ghEditIssueLabels: (cwd: string, issueNumber: number, add: string[], remove: string[]) => Promise<void>
   ghDefaultBranch: (cwd: string) => Promise<string>
-  ghCreatePr: (cwd: string, title: string, body: string, head?: string, base?: string) => Promise<{ url: string }>
+  ghListLabels: (cwd: string) => Promise<GitHubLabel[]>
+  ghEditPrLabels: (cwd: string, prNumber: number, add: string[], remove: string[]) => Promise<void>
+  ghCreatePr: (cwd: string, title: string, body: string, head?: string, base?: string, labels?: string[]) => Promise<{ url: string }>
   ghListPrs: (cwd: string, state: string, limit: number) => Promise<GitHubPR[]>
   ghGetPr: (cwd: string, prNumber: number) => Promise<GitHubPRDetail>
   ghMergePr: (cwd: string, prNumber: number, method: PRMergeMethod, deleteBranch?: boolean) => Promise<void>
