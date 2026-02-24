@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { useDrag } from 'react-dnd'
 import { MosaicDragType } from 'react-mosaic-component'
 import { useWorkspaceStore, useActiveProject } from '../stores/workspace-store'
-import { getWidget, getInstanceSuffix } from '../stores/widget-registry'
+import { getWidget, getBaseType, getInstanceSuffix } from '../stores/widget-registry'
 import { MOSAIC_ID } from './WidgetArea'
 import { Project } from '../../../shared/types'
 
@@ -50,11 +50,19 @@ function DraggableTrayButton({
   let color = widgetDef.color
   let displayLabel = widgetDef.label
   const suffix = getInstanceSuffix(widgetId)
+  const baseType = getBaseType(widgetId)
   if (suffix) {
-    const termState = project.widgetState.terminals[suffix]
-    if (termState) {
-      displayLabel = termState.label
-      if (termState.color) color = termState.color
+    if (baseType === 'terminal') {
+      const termState = project.widgetState.terminals[suffix]
+      if (termState) {
+        displayLabel = termState.label
+        if (termState.color) color = termState.color
+      }
+    } else if (baseType === 'file-viewer') {
+      const viewerState = project.widgetState.fileViewers[suffix]
+      if (viewerState?.currentFilePath) {
+        displayLabel = viewerState.currentFilePath.split(/[\\/]/).pop() || widgetDef.label
+      }
     }
   }
 

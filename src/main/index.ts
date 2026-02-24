@@ -1,6 +1,6 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
-import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, statSync } from 'fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, statSync, watch, FSWatcher } from 'fs'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
@@ -62,6 +62,16 @@ const ptyBuffers = new Map<string, string>()
 const ptyScrollbacks = new Map<string, string>()
 const MAX_SCROLLBACK_BYTES = 512 * 1024
 
+// File watcher management
+const fileWatchers = new Map<string, FSWatcher>()
+
+function closeAllFileWatchers(): void {
+  for (const [id, watcher] of fileWatchers) {
+    watcher.close()
+    fileWatchers.delete(id)
+  }
+}
+
 function killAllPtySessions(): void {
   for (const [id, session] of ptySessions) {
     session.kill()
@@ -89,6 +99,9 @@ function migrateWidgetState(
   const state = widgetState as unknown as WidgetState
   if (!state.terminals) {
     state.terminals = {}
+  }
+  if (!state.fileViewers) {
+    state.fileViewers = {}
   }
   if (!state.todoViewMode) {
     state.todoViewMode = 'list'
@@ -900,6 +913,40 @@ app.whenReady().then(() => {
     }
   })
 
+  // IPC: Watch a file for changes
+  ipcMain.on('fs:watch-file', (_event, watchId: string, filePath: string) => {
+    // Close existing watcher for this ID if any
+    const existing = fileWatchers.get(watchId)
+    if (existing) {
+      existing.close()
+      fileWatchers.delete(watchId)
+    }
+    try {
+      const watcher = watch(filePath, (eventType) => {
+        if (eventType === 'change') {
+          const win = BrowserWindow.getAllWindows()[0]
+          if (win && !win.isDestroyed()) {
+            win.webContents.send('fs:file-changed', watchId, filePath)
+          }
+        }
+      })
+      watcher.on('error', () => {
+        fileWatchers.delete(watchId)
+      })
+      fileWatchers.set(watchId, watcher)
+    } catch {
+      // File may not exist yet, ignore
+    }
+  })
+
+  ipcMain.on('fs:unwatch-file', (_event, watchId: string) => {
+    const watcher = fileWatchers.get(watchId)
+    if (watcher) {
+      watcher.close()
+      fileWatchers.delete(watchId)
+    }
+  })
+
   createWindow()
 
   // Auto-update: check for updates, let user trigger download/install
@@ -939,10 +986,12 @@ app.whenReady().then(() => {
 
 app.on('before-quit', () => {
   killAllPtySessions()
+  closeAllFileWatchers()
 })
 
 app.on('window-all-closed', () => {
   killAllPtySessions()
+  closeAllFileWatchers()
   if (process.platform !== 'darwin') {
     app.quit()
   }

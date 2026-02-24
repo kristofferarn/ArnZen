@@ -4,6 +4,7 @@ out
 .DS_Store
 Thumbs.db
 .eslintcache
+*.tsbuildinfo
 *.log*
 .env
 .env.*
