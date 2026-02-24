@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { GitHubPR, GitHubPRDetail, PRMergeMethod } from '../../../shared/types'
+import { GitHubLabel, GitHubPR, GitHubPRDetail, PRMergeMethod } from '../../../shared/types'
 
 export type PRStateFilter = 'open' | 'closed' | 'merged' | 'all'
 
@@ -21,6 +21,8 @@ interface PullsInfo {
   prDetail: GitHubPRDetail | null
   loadingDetail: boolean
   addingComment: boolean
+  repoLabels: GitHubLabel[]
+  loadingLabels: boolean
 }
 
 const DEFAULT_PULLS: PullsInfo = {
@@ -35,7 +37,9 @@ const DEFAULT_PULLS: PullsInfo = {
   selectedPR: null,
   prDetail: null,
   loadingDetail: false,
-  addingComment: false
+  addingComment: false,
+  repoLabels: [],
+  loadingLabels: false
 }
 
 interface PullsState {
@@ -43,13 +47,15 @@ interface PullsState {
 
   detectRepo: (projectId: string, rootPath: string) => Promise<void>
   refresh: (projectId: string, rootPath: string) => Promise<void>
-  createPR: (projectId: string, rootPath: string, title: string, body: string, head?: string, base?: string) => Promise<void>
+  createPR: (projectId: string, rootPath: string, title: string, body: string, head?: string, base?: string, labels?: string[]) => Promise<void>
   setFilter: (projectId: string, filter: Partial<PullsFilter>) => void
   selectPR: (projectId: string, rootPath: string, prNumber: number) => Promise<void>
   deselectPR: (projectId: string) => void
   addComment: (projectId: string, rootPath: string, prNumber: number, body: string) => Promise<void>
   mergePR: (projectId: string, rootPath: string, prNumber: number, method: PRMergeMethod, deleteBranch?: boolean) => Promise<void>
   closePR: (projectId: string, rootPath: string, prNumber: number) => Promise<void>
+  fetchLabels: (projectId: string, rootPath: string) => Promise<void>
+  editPRLabels: (projectId: string, rootPath: string, prNumber: number, add: string[], remove: string[]) => Promise<void>
   clear: (projectId: string) => void
 }
 
@@ -118,7 +124,7 @@ export const usePullsStore = create<PullsState>((set, get) => ({
     }
   },
 
-  createPR: async (projectId, rootPath, title, body, head?, base?) => {
+  createPR: async (projectId, rootPath, title, body, head?, base?, labels?) => {
     set((s) => ({
       projects: {
         ...s.projects,
@@ -127,7 +133,7 @@ export const usePullsStore = create<PullsState>((set, get) => ({
     }))
 
     try {
-      await window.api.ghCreatePr(rootPath, title, body, head, base)
+      await window.api.ghCreatePr(rootPath, title, body, head, base, labels)
       set((s) => ({
         projects: {
           ...s.projects,
@@ -302,6 +308,52 @@ export const usePullsStore = create<PullsState>((set, get) => ({
           [projectId]: {
             ...getInfo(s, projectId),
             merging: false,
+            error: err instanceof Error ? err.message : String(err)
+          }
+        }
+      }))
+    }
+  },
+
+  fetchLabels: async (projectId, rootPath) => {
+    const current = getInfo(get(), projectId)
+    if (current.repoLabels.length > 0 || current.loadingLabels) return
+    set((s) => ({
+      projects: {
+        ...s.projects,
+        [projectId]: { ...getInfo(s, projectId), loadingLabels: true }
+      }
+    }))
+
+    try {
+      const labels = await window.api.ghListLabels(rootPath)
+      set((s) => ({
+        projects: {
+          ...s.projects,
+          [projectId]: { ...getInfo(s, projectId), repoLabels: labels, loadingLabels: false }
+        }
+      }))
+    } catch {
+      set((s) => ({
+        projects: {
+          ...s.projects,
+          [projectId]: { ...getInfo(s, projectId), loadingLabels: false }
+        }
+      }))
+    }
+  },
+
+  editPRLabels: async (projectId, rootPath, prNumber, add, remove) => {
+    try {
+      await window.api.ghEditPrLabels(rootPath, prNumber, add, remove)
+      await get().selectPR(projectId, rootPath, prNumber)
+      await get().refresh(projectId, rootPath)
+    } catch (err) {
+      set((s) => ({
+        projects: {
+          ...s.projects,
+          [projectId]: {
+            ...getInfo(s, projectId),
             error: err instanceof Error ? err.message : String(err)
           }
         }

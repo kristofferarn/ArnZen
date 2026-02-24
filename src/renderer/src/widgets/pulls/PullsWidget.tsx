@@ -65,13 +65,26 @@ export function PullsWidget(): React.JSX.Element {
   )
 
   const handleCreate = useCallback(
-    (title: string, body: string, head: string, base: string) => {
+    (title: string, body: string, head: string, base: string, labels: string[]) => {
       if (!projectId || !rootPath) return
-      usePullsStore.getState().createPR(projectId, rootPath, title, body, head, base).then(() => {
+      usePullsStore.getState().createPR(projectId, rootPath, title, body, head, base, labels.length > 0 ? labels : undefined).then(() => {
         setShowCreate(false)
       })
     },
     [projectId, rootPath]
+  )
+
+  const handleFetchLabels = useCallback(() => {
+    if (!projectId || !rootPath) return
+    usePullsStore.getState().fetchLabels(projectId, rootPath)
+  }, [projectId, rootPath])
+
+  const handleEditLabels = useCallback(
+    (add: string[], remove: string[]) => {
+      if (!projectId || !rootPath || !pulls.selectedPR) return
+      usePullsStore.getState().editPRLabels(projectId, rootPath, pulls.selectedPR, add, remove)
+    },
+    [projectId, rootPath, pulls.selectedPR]
   )
 
   const handleSelectPR = useCallback(
@@ -203,8 +216,11 @@ export function PullsWidget(): React.JSX.Element {
           currentBranch={gitInfo.branch}
           defaultBranch={defaultBranch}
           branches={gitInfo.branches}
+          repoLabels={pulls.repoLabels}
+          loadingLabels={pulls.loadingLabels}
           onSubmit={handleCreate}
           onCancel={() => setShowCreate(false)}
+          onFetchLabels={handleFetchLabels}
         />
       )}
 
@@ -244,12 +260,16 @@ export function PullsWidget(): React.JSX.Element {
           addingComment={pulls.addingComment}
           merging={pulls.merging}
           error={pulls.error}
+          repoLabels={pulls.repoLabels}
+          loadingLabels={pulls.loadingLabels}
           onClose={handleDeselectPR}
           onAddComment={handleAddComment}
           onRefresh={handleRefreshDetail}
           onMerge={handleMerge}
           onClosePR={handleClosePR}
           onReviewWithClaude={handleReviewWithClaude}
+          onFetchLabels={handleFetchLabels}
+          onEditLabels={handleEditLabels}
         />
       )}
     </div>
