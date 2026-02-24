@@ -8,6 +8,7 @@ import {
   widgetRegistry,
   terminalPresets,
   getWidget,
+  getBaseType,
   getInstanceSuffix
 } from '../stores/widget-registry'
 import { WidgetTray } from './WidgetTray'
@@ -37,11 +38,19 @@ function WidgetToolbar({
   let displayLabel = widgetDef.label
   let color = widgetDef.color
   const suffix = getInstanceSuffix(widgetId)
+  const baseType = getBaseType(widgetId)
   if (suffix && project) {
-    const termState = project.widgetState.terminals[suffix]
-    if (termState) {
-      displayLabel = termState.label
-      if (termState.color) color = termState.color
+    if (baseType === 'terminal') {
+      const termState = project.widgetState.terminals[suffix]
+      if (termState) {
+        displayLabel = termState.label
+        if (termState.color) color = termState.color
+      }
+    } else if (baseType === 'file-viewer') {
+      const viewerState = project.widgetState.fileViewers[suffix]
+      if (viewerState?.currentFilePath) {
+        displayLabel = viewerState.currentFilePath.split(/[\\/]/).pop() || widgetDef.label
+      }
     }
   }
 

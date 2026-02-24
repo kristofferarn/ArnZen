@@ -11,7 +11,7 @@ const DEFAULT_TREE_WIDTH = 250
 export function EditorArea(): React.JSX.Element {
   const project = useActiveProject()
   const { updateEditorState } = useWorkspaceStore()
-  const { openFiles, activeFilePath, hydrate, clear } = useEditorStore()
+  const { openFiles, activeFilePath, openFile, hydrate, clear } = useEditorStore()
   const [treeWidth, setTreeWidth] = useState(DEFAULT_TREE_WIDTH)
   const resizing = useRef(false)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -89,7 +89,7 @@ export function EditorArea(): React.JSX.Element {
         <div className="h-8 flex items-center px-3 text-xs text-[var(--color-text-muted)] uppercase tracking-wider border-b border-[var(--color-border)] shrink-0 mono">
           Explorer
         </div>
-        <FileTree rootPath={project.rootPath} />
+        <FileTree rootPath={project.rootPath} onFileSelect={openFile} activeFilePath={activeFilePath} />
       </div>
 
       {/* Resize handle */}

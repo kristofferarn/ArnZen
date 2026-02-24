@@ -8,6 +8,7 @@ import {
   TodoViewMode,
   ViewMode,
   TerminalInstanceState,
+  FileViewerInstanceState,
   MosaicLayoutNode,
   MosaicDirection,
   MosaicParentNode,
@@ -51,6 +52,7 @@ interface WorkspaceState {
   ) => void
   updateMosaicLayout: (node: MosaicLayoutNode<string> | null) => void
   updateTerminalLabel: (instanceSuffix: string, label: string) => void
+  updateFileViewerState: (instanceSuffix: string, updates: Partial<FileViewerInstanceState>) => void
 
   // Dev server
   updateDevCommand: (command: string) => void
@@ -158,6 +160,15 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
               ...p.widgetState,
               terminals: { ...p.widgetState.terminals, [instanceSuffix]: terminalState }
             }
+          } else if (widgetId === 'file-viewer') {
+            const viewerState: FileViewerInstanceState = {
+              currentFilePath: null,
+              wordWrap: false
+            }
+            newWidgetState = {
+              ...p.widgetState,
+              fileViewers: { ...p.widgetState.fileViewers, [instanceSuffix]: viewerState }
+            }
           }
         } else {
           panelId = widgetId
@@ -203,6 +214,10 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         if (baseType === 'terminal' && suffix) {
           const { [suffix]: _, ...remainingTerminals } = p.widgetState.terminals
           newWidgetState = { ...p.widgetState, terminals: remainingTerminals }
+        } else if (baseType === 'file-viewer' && suffix) {
+          window.api.unwatchFile(`file-viewer:${suffix}`)
+          const { [suffix]: _, ...remainingViewers } = p.widgetState.fileViewers
+          newWidgetState = { ...p.widgetState, fileViewers: remainingViewers }
         }
 
         return {
@@ -333,6 +348,28 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
             terminals: {
               ...p.widgetState.terminals,
               [instanceSuffix]: { ...existing, label }
+            }
+          }
+        }
+      })
+    }))
+  },
+
+  updateFileViewerState: (instanceSuffix, updates) => {
+    const { activeProjectId } = get()
+    if (!activeProjectId) return
+    set((s) => ({
+      projects: s.projects.map((p) => {
+        if (p.id !== activeProjectId) return p
+        const existing = p.widgetState.fileViewers[instanceSuffix]
+        if (!existing) return p
+        return {
+          ...p,
+          widgetState: {
+            ...p.widgetState,
+            fileViewers: {
+              ...p.widgetState.fileViewers,
+              [instanceSuffix]: { ...existing, ...updates }
             }
           }
         }
