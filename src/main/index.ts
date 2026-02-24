@@ -11,6 +11,9 @@ import {
   DirEntry,
   GitFileStatus,
   GitHubIssue,
+  GitHubPR,
+  GitHubPRDetail,
+  PRMergeMethod,
   GitStatusDetailResult,
   GitStatusResult,
   GlobalConfig,
@@ -690,6 +693,118 @@ app.whenReady().then(() => {
         60000
       )
       return { url: url.trim() }
+    }
+  )
+
+  // IPC: GitHub PR operations (via gh CLI)
+  ipcMain.handle(
+    'gh:list-prs',
+    async (_event, cwd: string, state: string, limit: number): Promise<GitHubPR[]> => {
+      const json = await runGh(cwd, [
+        'pr', 'list',
+        '--state', state === 'merged' ? 'merged' : state,
+        '--limit', String(limit),
+        '--json', 'number,title,body,state,author,labels,assignees,createdAt,updatedAt,comments,url,headRefName,baseRefName,isDraft,reviewDecision,statusCheckRollup,mergeable'
+      ])
+      if (!json) return []
+      const raw = JSON.parse(json) as Array<Record<string, unknown>>
+      return raw.map((pr) => {
+        const checks = ((pr.statusCheckRollup as Array<Record<string, string>>) ?? []).map((c) => ({
+          name: c.name ?? '',
+          state: c.state ?? '',
+          conclusion: c.conclusion ?? ''
+        }))
+        return {
+          number: pr.number as number,
+          title: pr.title as string,
+          body: pr.body as string,
+          state: (pr.state as string).toUpperCase() as 'OPEN' | 'CLOSED' | 'MERGED',
+          author: ((pr.author as Record<string, string>)?.login) ?? '',
+          labels: (pr.labels as Array<{ name: string; color: string }>) ?? [],
+          assignees: ((pr.assignees as Array<{ login: string }>) ?? []).map((a) => a.login),
+          createdAt: pr.createdAt as string,
+          updatedAt: pr.updatedAt as string,
+          commentsCount: Array.isArray(pr.comments) ? (pr.comments as unknown[]).length : 0,
+          url: pr.url as string,
+          headRefName: (pr.headRefName as string) ?? '',
+          baseRefName: (pr.baseRefName as string) ?? '',
+          isDraft: (pr.isDraft as boolean) ?? false,
+          reviewDecision: ((pr.reviewDecision as string) ?? '') as GitHubPR['reviewDecision'],
+          mergeable: ((pr.mergeable as string) ?? 'UNKNOWN').toUpperCase() as GitHubPR['mergeable'],
+          checks
+        }
+      })
+    }
+  )
+
+  ipcMain.handle(
+    'gh:get-pr',
+    async (_event, cwd: string, prNumber: number): Promise<GitHubPRDetail> => {
+      const json = await runGh(cwd, [
+        'pr', 'view', String(prNumber),
+        '--json', 'number,title,body,state,author,labels,assignees,createdAt,updatedAt,comments,url,headRefName,baseRefName,isDraft,reviewDecision,statusCheckRollup,mergeable,additions,deletions,changedFiles,commits,milestone,reviewRequests'
+      ])
+      const pr = JSON.parse(json) as Record<string, unknown>
+      const comments = (pr.comments as Array<Record<string, unknown>> ?? []).map((c) => ({
+        id: c.id as number,
+        author: ((c.author as Record<string, string>)?.login) ?? '',
+        body: c.body as string,
+        createdAt: c.createdAt as string
+      }))
+      const checks = ((pr.statusCheckRollup as Array<Record<string, string>>) ?? []).map((c) => ({
+        name: c.name ?? '',
+        state: c.state ?? '',
+        conclusion: c.conclusion ?? ''
+      }))
+      return {
+        number: pr.number as number,
+        title: pr.title as string,
+        body: pr.body as string,
+        state: (pr.state as string).toUpperCase() as 'OPEN' | 'CLOSED' | 'MERGED',
+        author: ((pr.author as Record<string, string>)?.login) ?? '',
+        labels: (pr.labels as Array<{ name: string; color: string }>) ?? [],
+        assignees: ((pr.assignees as Array<{ login: string }>) ?? []).map((a) => a.login),
+        createdAt: pr.createdAt as string,
+        updatedAt: pr.updatedAt as string,
+        commentsCount: comments.length,
+        url: pr.url as string,
+        headRefName: (pr.headRefName as string) ?? '',
+        baseRefName: (pr.baseRefName as string) ?? '',
+        isDraft: (pr.isDraft as boolean) ?? false,
+        reviewDecision: ((pr.reviewDecision as string) ?? '') as GitHubPR['reviewDecision'],
+        mergeable: ((pr.mergeable as string) ?? 'UNKNOWN').toUpperCase() as GitHubPR['mergeable'],
+        checks,
+        additions: (pr.additions as number) ?? 0,
+        deletions: (pr.deletions as number) ?? 0,
+        changedFiles: (pr.changedFiles as number) ?? 0,
+        commits: ((pr.commits as Record<string, unknown>)?.totalCount as number) ??
+          (Array.isArray(pr.commits) ? (pr.commits as unknown[]).length : 0),
+        milestone: ((pr.milestone as Record<string, string>)?.title) ?? null,
+        reviewRequests: ((pr.reviewRequests as Array<{ login: string }>) ?? []).map((r) => r.login),
+        comments
+      }
+    }
+  )
+
+  ipcMain.handle(
+    'gh:merge-pr',
+    async (_event, cwd: string, prNumber: number, method: PRMergeMethod): Promise<void> => {
+      const flag = method === 'squash' ? '--squash' : method === 'rebase' ? '--rebase' : '--merge'
+      await runGh(cwd, ['pr', 'merge', String(prNumber), flag, '--delete-branch'], 60000)
+    }
+  )
+
+  ipcMain.handle(
+    'gh:close-pr',
+    async (_event, cwd: string, prNumber: number): Promise<void> => {
+      await runGh(cwd, ['pr', 'close', String(prNumber)], 30000)
+    }
+  )
+
+  ipcMain.handle(
+    'gh:comment-pr',
+    async (_event, cwd: string, prNumber: number, body: string): Promise<void> => {
+      await runGh(cwd, ['pr', 'comment', String(prNumber), '--body', body], 30000)
     }
   )
 

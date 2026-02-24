@@ -1,9 +1,10 @@
 import { ComponentType } from 'react'
-import { Bot, CheckSquare, CircleDot, GitCommitHorizontal, Terminal } from 'lucide-react'
+import { Bot, CheckSquare, CircleDot, GitCommitHorizontal, GitPullRequestDraft, Terminal } from 'lucide-react'
 import { TodoWidget } from '../widgets/TodoWidget'
 import { TerminalWidget } from '../widgets/TerminalWidget'
 import { SourceControlWidget } from '../widgets/source-control/SourceControlWidget'
 import { IssuesWidget } from '../widgets/issues/IssuesWidget'
+import { PullsWidget } from '../widgets/pulls/PullsWidget'
 
 export interface WidgetDefinition {
   id: string
@@ -42,6 +43,13 @@ export const widgetRegistry: WidgetDefinition[] = [
     icon: CircleDot,
     component: IssuesWidget,
     color: '#8a7ab8'
+  },
+  {
+    id: 'pulls',
+    label: 'Pull Requests',
+    icon: GitPullRequestDraft,
+    component: PullsWidget,
+    color: '#3fb950'
   },
   {
     id: 'terminal',

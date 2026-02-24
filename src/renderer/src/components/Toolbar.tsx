@@ -330,7 +330,7 @@ export function Toolbar(): React.JSX.Element {
       <div className="w-px h-4 bg-[var(--color-border)]" />
 
       {/* Primary widget buttons: Source Control, Issues, Claude Code */}
-      {widgetRegistry.filter((w) => w.id === 'source-control' || w.id === 'issues').map((w) => {
+      {widgetRegistry.filter((w) => w.id === 'source-control' || w.id === 'issues' || w.id === 'pulls').map((w) => {
         const Icon = w.icon
         const isPresent = !w.allowMultiple && (
           existingLeaves.some((p) => getBaseType(p) === w.id) ||

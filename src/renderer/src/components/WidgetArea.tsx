@@ -146,6 +146,13 @@ export function WidgetArea(): React.JSX.Element {
         action: () => addPanel('issues')
       },
       {
+        label: 'Pull Requests',
+        icon: widgetRegistry.find((w) => w.id === 'pulls')!.icon,
+        color: widgetRegistry.find((w) => w.id === 'pulls')!.color,
+        description: 'Review and merge pull requests',
+        action: () => addPanel('pulls')
+      },
+      {
         label: terminalPresets[0].label,
         icon: terminalPresets[0].icon,
         color: terminalPresets[0].color,
