@@ -320,6 +320,10 @@ app.whenReady().then(() => {
     return result.filePaths[0]
   })
 
+  ipcMain.handle('open-in-vscode', async (_event, folderPath: string) => {
+    await execFileAsync('code', [folderPath], { shell: true, timeout: 10000 })
+  })
+
   // IPC: Window controls
   ipcMain.on('window-minimize', () => {
     BrowserWindow.getFocusedWindow()?.minimize()
