@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { FolderOpen, Plus, X, Play, Square, ChevronDown, Pencil } from 'lucide-react'
+import { FolderOpen, Plus, X, Play, Square, ChevronDown, Pencil, LayoutGrid, Code2 } from 'lucide-react'
 import { useWorkspaceStore, useActiveProject } from '../stores/workspace-store'
 import { widgetRegistry, terminalPresets, getBaseType } from '../stores/widget-registry'
 import { useDevServerStore } from '../stores/devserver-store'
@@ -7,7 +7,7 @@ import { GitBranchMenu } from './GitBranchMenu'
 import { DEV_SERVER_SUFFIX, DEV_SERVER_PANEL_ID, getMosaicLeaves } from '../../../shared/types'
 
 export function Toolbar(): React.JSX.Element {
-  const { projects, addProject, setActiveProject, removeProject, addPanel, removePanel, updateDevCommand } = useWorkspaceStore()
+  const { projects, addProject, setActiveProject, removeProject, addPanel, removePanel, updateDevCommand, setViewMode } = useWorkspaceStore()
   const project = useActiveProject()
   const { running, peekOpen, setRunning, togglePeek, closePeek } = useDevServerStore()
 
@@ -100,7 +100,9 @@ export function Toolbar(): React.JSX.Element {
   })
 
   return (
-    <div className="relative z-10 flex items-center h-10 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] px-3 gap-2 app-no-drag">
+    <div className="relative z-10 flex items-center h-10 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] px-3 app-no-drag">
+      {/* Left: project & context */}
+      <div className="flex items-center gap-2">
       {/* Project selector */}
       <div className="relative" ref={projectMenuRef}>
         <button
@@ -166,6 +168,46 @@ export function Toolbar(): React.JSX.Element {
       {/* Divider */}
       <div className="w-px h-4 bg-[var(--color-border)]" />
 
+      {/* Git branch */}
+      <GitBranchMenu />
+      </div>
+
+      {/* Spacer */}
+      <div className="flex-1" />
+
+      {/* Right: workspace actions */}
+      <div className="flex items-center gap-2">
+      {/* Mode toggle */}
+      <div className="flex items-center h-7 rounded-md overflow-hidden border border-[var(--color-border)]">
+        <button
+          onClick={() => setViewMode('widgets')}
+          disabled={!project}
+          className={`flex items-center gap-1 px-2 h-full text-xs transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${
+            !project || project.widgetState.viewMode === 'widgets'
+              ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
+          }`}
+          title="Widget panels"
+        >
+          <LayoutGrid size={13} />
+        </button>
+        <button
+          onClick={() => setViewMode('editor')}
+          disabled={!project}
+          className={`flex items-center gap-1 px-2 h-full text-xs transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${
+            project?.widgetState.viewMode === 'editor'
+              ? 'bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)]'
+              : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
+          }`}
+          title="Code viewer"
+        >
+          <Code2 size={13} />
+        </button>
+      </div>
+
+      {/* Divider */}
+      <div className="w-px h-4 bg-[var(--color-border)]" />
+
       {/* Dev server toggle */}
       <div className="relative" ref={devPopoverRef}>
         <div className="flex items-center">
@@ -220,7 +262,7 @@ export function Toolbar(): React.JSX.Element {
         </div>
 
         {showDevPopover && (
-          <div className="absolute top-full left-0 mt-1 w-64 py-2 px-3 rounded-md bg-[var(--color-surface-overlay)] border border-[var(--color-border-strong)] shadow-lg z-50">
+          <div className="absolute top-full right-0 mt-1 w-64 py-2 px-3 rounded-md bg-[var(--color-surface-overlay)] border border-[var(--color-border-strong)] shadow-lg z-50">
             <div className="mono text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] mb-1.5">
               Dev command
             </div>
@@ -280,12 +322,6 @@ export function Toolbar(): React.JSX.Element {
       {/* Divider */}
       <div className="w-px h-4 bg-[var(--color-border)]" />
 
-      {/* Git branch */}
-      <GitBranchMenu />
-
-      {/* Divider */}
-      <div className="w-px h-4 bg-[var(--color-border)]" />
-
       {/* Add widget */}
       <div className="relative" ref={widgetMenuRef}>
         <button
@@ -299,7 +335,7 @@ export function Toolbar(): React.JSX.Element {
         </button>
 
         {showWidgetMenu && (
-          <div className="absolute top-full left-0 mt-1 w-48 py-1 rounded-md bg-[var(--color-surface-overlay)] border border-[var(--color-border-strong)] shadow-lg z-50">
+          <div className="absolute top-full right-0 mt-1 w-48 py-1 rounded-md bg-[var(--color-surface-overlay)] border border-[var(--color-border-strong)] shadow-lg z-50">
             {availableWidgets.length > 0 ? (
               availableWidgets.map((w) => {
                 const Icon = w.icon
@@ -349,6 +385,7 @@ export function Toolbar(): React.JSX.Element {
             )}
           </div>
         )}
+      </div>
       </div>
     </div>
   )

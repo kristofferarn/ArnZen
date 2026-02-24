@@ -3,10 +3,13 @@ import { TitleBar } from './components/TitleBar'
 import { Toolbar } from './components/Toolbar'
 import { DevServerPeek } from './components/DevServerPeek'
 import { WidgetArea } from './components/WidgetArea'
-import { useWorkspaceStore } from './stores/workspace-store'
+import { EditorArea } from './components/EditorArea'
+import { useWorkspaceStore, useActiveProject } from './stores/workspace-store'
 
 function App(): React.JSX.Element {
   const { projects, activeProjectId, loadProjects, setActiveProjectId } = useWorkspaceStore()
+  const project = useActiveProject()
+  const viewMode = project?.widgetState.viewMode ?? 'widgets'
   const initialized = useRef(false)
 
   // Load projects on mount
@@ -42,7 +45,7 @@ function App(): React.JSX.Element {
       <Toolbar />
       <DevServerPeek />
       <div className="flex-1 flex flex-col overflow-hidden">
-        <WidgetArea />
+        {viewMode === 'editor' ? <EditorArea /> : <WidgetArea />}
       </div>
     </div>
   )

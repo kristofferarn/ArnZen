@@ -6,6 +6,7 @@ import {
   TaskStatus,
   TaskPriority,
   TodoViewMode,
+  ViewMode,
   TerminalInstanceState,
   MosaicLayoutNode,
   DEFAULT_WIDGET_STATE,
@@ -55,6 +56,10 @@ interface WorkspaceState {
   moveTaskToStatus: (taskId: string, newStatus: TaskStatus, insertIndex?: number) => void
   clearDoneTasks: () => void
   setTodoViewMode: (mode: TodoViewMode) => void
+
+  // View mode
+  setViewMode: (mode: ViewMode) => void
+  updateEditorState: (openFiles: string[], activeFile: string | null) => void
 
   // Notes
   updateNotes: (notes: string) => void
@@ -154,7 +159,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
         return {
           ...p,
-          widgetState: newWidgetState,
+          widgetState: { ...newWidgetState, viewMode: 'widgets' },
           layout: {
             ...p.layout,
             mosaic: addMosaicLeaf(p.layout.mosaic, panelId)
@@ -402,6 +407,37 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
       projects: s.projects.map((p) =>
         p.id === activeProjectId
           ? { ...p, widgetState: { ...p.widgetState, todoViewMode: mode } }
+          : p
+      )
+    }))
+  },
+
+  setViewMode: (mode) => {
+    const { activeProjectId } = get()
+    if (!activeProjectId) return
+    set((s) => ({
+      projects: s.projects.map((p) =>
+        p.id === activeProjectId
+          ? { ...p, widgetState: { ...p.widgetState, viewMode: mode } }
+          : p
+      )
+    }))
+  },
+
+  updateEditorState: (openFiles, activeFile) => {
+    const { activeProjectId } = get()
+    if (!activeProjectId) return
+    set((s) => ({
+      projects: s.projects.map((p) =>
+        p.id === activeProjectId
+          ? {
+              ...p,
+              widgetState: {
+                ...p.widgetState,
+                editorOpenFiles: openFiles,
+                editorActiveFile: activeFile
+              }
+            }
           : p
       )
     }))

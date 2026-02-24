@@ -1,3 +1,14 @@
+// ── View mode ──
+
+export type ViewMode = 'widgets' | 'editor'
+
+// ── Directory entry (for file tree) ──
+
+export interface DirEntry {
+  name: string
+  isDirectory: boolean
+}
+
 // ── Task types ──
 
 export type TaskStatus = 'todo' | 'in-progress' | 'done'
@@ -65,6 +76,9 @@ export interface WidgetState {
   terminalCwd: string
   terminals: Record<string, TerminalInstanceState>
   notes: string
+  viewMode: ViewMode
+  editorOpenFiles: string[]
+  editorActiveFile: string | null
 }
 
 export interface WidgetLayout {
@@ -100,7 +114,10 @@ export const DEFAULT_WIDGET_STATE: WidgetState = {
   todoViewMode: 'list',
   terminalCwd: '',
   terminals: {},
-  notes: ''
+  notes: '',
+  viewMode: 'widgets',
+  editorOpenFiles: [],
+  editorActiveFile: null
 }
 
 export const DEFAULT_LAYOUT: WidgetLayout = {

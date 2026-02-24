@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import { GitStatusResult, GlobalConfig, Project } from '../shared/types'
+import { DirEntry, GitStatusResult, GlobalConfig, Project } from '../shared/types'
 
 const api = {
   loadProjects: (): Promise<{ projects: Project[]; lastActiveProjectId: string | null }> =>
@@ -54,7 +54,13 @@ const api = {
   gitFetch: (cwd: string): Promise<void> =>
     ipcRenderer.invoke('git:fetch', cwd),
   gitPull: (cwd: string): Promise<void> =>
-    ipcRenderer.invoke('git:pull', cwd)
+    ipcRenderer.invoke('git:pull', cwd),
+
+  // Filesystem (editor)
+  readDir: (dirPath: string): Promise<DirEntry[]> =>
+    ipcRenderer.invoke('fs:read-dir', dirPath),
+  readFile: (filePath: string): Promise<{ content: string } | { error: string }> =>
+    ipcRenderer.invoke('fs:read-file', filePath)
 }
 
 if (process.contextIsolated) {

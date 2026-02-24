@@ -1,12 +1,13 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import { join } from 'path'
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
+import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, statSync } from 'fs'
 import { execFile } from 'child_process'
 import { promisify } from 'util'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/logo_transparent.png?asset'
 import {
   DEFAULT_PROJECT_SETTINGS,
+  DirEntry,
   GitStatusResult,
   GlobalConfig,
   Project,
@@ -470,6 +471,55 @@ app.whenReady().then(() => {
 
   ipcMain.handle('git:pull', async (_event, cwd: string): Promise<void> => {
     await runGit(cwd, ['pull'])
+  })
+
+  // IPC: Read directory listing (for editor file tree)
+  const FILTERED_NAMES = new Set(['.git', 'node_modules', '.DS_Store', 'Thumbs.db', '.arnzen'])
+
+  ipcMain.handle('fs:read-dir', async (_event, dirPath: string): Promise<DirEntry[]> => {
+    try {
+      const entries = readdirSync(dirPath)
+      const result: DirEntry[] = []
+      for (const name of entries) {
+        if (FILTERED_NAMES.has(name)) continue
+        try {
+          const fullPath = join(dirPath, name)
+          const stat = statSync(fullPath)
+          result.push({ name, isDirectory: stat.isDirectory() })
+        } catch {
+          // Skip entries we can't stat
+        }
+      }
+      // Sort: directories first, then alphabetical (case-insensitive)
+      result.sort((a, b) => {
+        if (a.isDirectory !== b.isDirectory) return a.isDirectory ? -1 : 1
+        return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+      })
+      return result
+    } catch {
+      return []
+    }
+  })
+
+  // IPC: Read file contents (for editor viewer)
+  const MAX_FILE_SIZE = 1024 * 1024 // 1MB
+
+  ipcMain.handle('fs:read-file', async (_event, filePath: string): Promise<{ content: string } | { error: string }> => {
+    try {
+      const stat = statSync(filePath)
+      if (stat.size > MAX_FILE_SIZE) {
+        return { error: `File too large (${(stat.size / 1024 / 1024).toFixed(1)}MB). Max 1MB.` }
+      }
+      const buffer = readFileSync(filePath)
+      // Simple binary detection: check for null bytes in the first 8KB
+      const sample = buffer.subarray(0, 8192)
+      if (sample.includes(0)) {
+        return { error: 'Binary file — cannot display.' }
+      }
+      return { content: buffer.toString('utf-8') }
+    } catch (err) {
+      return { error: `Failed to read file: ${(err as Error).message}` }
+    }
   })
 
   createWindow()
