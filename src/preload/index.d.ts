@@ -44,10 +44,11 @@ interface ArnZenAPI {
   ghCreateIssue: (cwd: string, title: string, body: string) => Promise<{ number: number; url: string }>
   ghGetIssue: (cwd: string, issueNumber: number) => Promise<GitHubIssue & { comments: GitHubIssueComment[]; milestone: string | null }>
   ghAddComment: (cwd: string, issueNumber: number, body: string) => Promise<void>
-  ghCreatePr: (cwd: string, title: string, body: string) => Promise<{ url: string }>
+  ghDefaultBranch: (cwd: string) => Promise<string>
+  ghCreatePr: (cwd: string, title: string, body: string, head?: string, base?: string) => Promise<{ url: string }>
   ghListPrs: (cwd: string, state: string, limit: number) => Promise<GitHubPR[]>
   ghGetPr: (cwd: string, prNumber: number) => Promise<GitHubPRDetail>
-  ghMergePr: (cwd: string, prNumber: number, method: PRMergeMethod) => Promise<void>
+  ghMergePr: (cwd: string, prNumber: number, method: PRMergeMethod, deleteBranch?: boolean) => Promise<void>
   ghClosePr: (cwd: string, prNumber: number) => Promise<void>
   ghCommentPr: (cwd: string, prNumber: number, body: string) => Promise<void>
 

@@ -43,12 +43,12 @@ interface PullsState {
 
   detectRepo: (projectId: string, rootPath: string) => Promise<void>
   refresh: (projectId: string, rootPath: string) => Promise<void>
-  createPR: (projectId: string, rootPath: string, title: string, body: string) => Promise<void>
+  createPR: (projectId: string, rootPath: string, title: string, body: string, head?: string, base?: string) => Promise<void>
   setFilter: (projectId: string, filter: Partial<PullsFilter>) => void
   selectPR: (projectId: string, rootPath: string, prNumber: number) => Promise<void>
   deselectPR: (projectId: string) => void
   addComment: (projectId: string, rootPath: string, prNumber: number, body: string) => Promise<void>
-  mergePR: (projectId: string, rootPath: string, prNumber: number, method: PRMergeMethod) => Promise<void>
+  mergePR: (projectId: string, rootPath: string, prNumber: number, method: PRMergeMethod, deleteBranch?: boolean) => Promise<void>
   closePR: (projectId: string, rootPath: string, prNumber: number) => Promise<void>
   clear: (projectId: string) => void
 }
@@ -118,7 +118,7 @@ export const usePullsStore = create<PullsState>((set, get) => ({
     }
   },
 
-  createPR: async (projectId, rootPath, title, body) => {
+  createPR: async (projectId, rootPath, title, body, head?, base?) => {
     set((s) => ({
       projects: {
         ...s.projects,
@@ -127,7 +127,7 @@ export const usePullsStore = create<PullsState>((set, get) => ({
     }))
 
     try {
-      await window.api.ghCreatePr(rootPath, title, body)
+      await window.api.ghCreatePr(rootPath, title, body, head, base)
       set((s) => ({
         projects: {
           ...s.projects,
@@ -245,7 +245,7 @@ export const usePullsStore = create<PullsState>((set, get) => ({
     }
   },
 
-  mergePR: async (projectId, rootPath, prNumber, method) => {
+  mergePR: async (projectId, rootPath, prNumber, method, deleteBranch?) => {
     set((s) => ({
       projects: {
         ...s.projects,
@@ -254,7 +254,7 @@ export const usePullsStore = create<PullsState>((set, get) => ({
     }))
 
     try {
-      await window.api.ghMergePr(rootPath, prNumber, method)
+      await window.api.ghMergePr(rootPath, prNumber, method, deleteBranch)
       set((s) => ({
         projects: {
           ...s.projects,

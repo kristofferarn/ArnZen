@@ -20,6 +20,7 @@ export function PullsWidget(): React.JSX.Element {
   const pulls = usePulls(project?.id)
   const gitInfo = useGitInfo(project?.id)
   const [showCreate, setShowCreate] = useState(false)
+  const [defaultBranch, setDefaultBranch] = useState<string | undefined>()
 
   const projectId = project?.id
   const rootPath = project?.rootPath
@@ -36,6 +37,11 @@ export function PullsWidget(): React.JSX.Element {
     if (!projectId || !rootPath) return
     usePullsStore.getState().refresh(projectId, rootPath)
   }, [projectId, rootPath, pulls.filter.state])
+
+  useEffect(() => {
+    if (!showCreate || !rootPath) return
+    window.api.ghDefaultBranch(rootPath).then(setDefaultBranch).catch(() => {})
+  }, [showCreate, rootPath])
 
   const handleRefresh = useCallback(() => {
     if (!projectId || !rootPath) return
@@ -59,9 +65,9 @@ export function PullsWidget(): React.JSX.Element {
   )
 
   const handleCreate = useCallback(
-    (title: string, body: string) => {
+    (title: string, body: string, head: string, base: string) => {
       if (!projectId || !rootPath) return
-      usePullsStore.getState().createPR(projectId, rootPath, title, body).then(() => {
+      usePullsStore.getState().createPR(projectId, rootPath, title, body, head, base).then(() => {
         setShowCreate(false)
       })
     },
@@ -90,9 +96,9 @@ export function PullsWidget(): React.JSX.Element {
   )
 
   const handleMerge = useCallback(
-    (method: PRMergeMethod) => {
+    (method: PRMergeMethod, deleteBranch?: boolean) => {
       if (!projectId || !rootPath || !pulls.selectedPR) return
-      usePullsStore.getState().mergePR(projectId, rootPath, pulls.selectedPR, method)
+      usePullsStore.getState().mergePR(projectId, rootPath, pulls.selectedPR, method, deleteBranch)
     },
     [projectId, rootPath, pulls.selectedPR]
   )
@@ -195,6 +201,8 @@ export function PullsWidget(): React.JSX.Element {
         <PullCreateForm
           creating={pulls.creating}
           currentBranch={gitInfo.branch}
+          defaultBranch={defaultBranch}
+          branches={gitInfo.branches}
           onSubmit={handleCreate}
           onCancel={() => setShowCreate(false)}
         />

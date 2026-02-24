@@ -684,14 +684,18 @@ app.whenReady().then(() => {
     }
   )
 
+  ipcMain.handle('gh:default-branch', async (_event, cwd: string): Promise<string> => {
+    const json = await runGh(cwd, ['repo', 'view', '--json', 'defaultBranchRef', '-q', '.defaultBranchRef.name'])
+    return json.trim()
+  })
+
   ipcMain.handle(
     'gh:create-pr',
-    async (_event, cwd: string, title: string, body: string) => {
-      const url = await runGh(
-        cwd,
-        ['pr', 'create', '--title', title, '--body', body],
-        60000
-      )
+    async (_event, cwd: string, title: string, body: string, head?: string, base?: string) => {
+      const args = ['pr', 'create', '--title', title, '--body', body]
+      if (head) args.push('--head', head)
+      if (base) args.push('--base', base)
+      const url = await runGh(cwd, args, 60000)
       return { url: url.trim() }
     }
   )
@@ -788,9 +792,11 @@ app.whenReady().then(() => {
 
   ipcMain.handle(
     'gh:merge-pr',
-    async (_event, cwd: string, prNumber: number, method: PRMergeMethod): Promise<void> => {
+    async (_event, cwd: string, prNumber: number, method: PRMergeMethod, deleteBranch?: boolean): Promise<void> => {
       const flag = method === 'squash' ? '--squash' : method === 'rebase' ? '--rebase' : '--merge'
-      await runGh(cwd, ['pr', 'merge', String(prNumber), flag, '--delete-branch'], 60000)
+      const args = ['pr', 'merge', String(prNumber), flag]
+      if (deleteBranch) args.push('--delete-branch')
+      await runGh(cwd, args, 60000)
     }
   )
 
