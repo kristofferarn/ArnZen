@@ -27,6 +27,11 @@ import {
 import { v4 as uuid } from 'uuid'
 import * as pty from 'node-pty'
 
+// Use separate userData directory in dev to avoid corrupting production data
+if (!app.isPackaged) {
+  app.setName('arnzen-dev')
+}
+
 const execFileAsync = promisify(execFile)
 
 async function runGit(cwd: string, args: string[], timeout = 10000): Promise<string> {
