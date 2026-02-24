@@ -1,5 +1,7 @@
 import { useState, useCallback, ComponentType } from 'react'
-import { Mosaic, MosaicWindow, MosaicNode } from 'react-mosaic-component'
+import { MosaicWithoutDragDropContext, MosaicWindow, MosaicNode } from 'react-mosaic-component'
+import { DndProvider } from 'react-dnd'
+import { HTML5Backend } from 'react-dnd-html5-backend'
 import { FolderOpen, Minus, X } from 'lucide-react'
 import { useActiveProject, useWorkspaceStore } from '../stores/workspace-store'
 import {
@@ -10,6 +12,8 @@ import {
 } from '../stores/widget-registry'
 import { WidgetTray } from './WidgetTray'
 import { getMosaicLeaves } from '../../../shared/types'
+
+export const MOSAIC_ID = 'arnzen-mosaic'
 
 function WidgetToolbar({
   widgetId,
@@ -169,46 +173,48 @@ export function WidgetArea(): React.JSX.Element {
     ]
 
     return (
-      <div className="flex flex-col h-full">
-        <div className="flex-1 flex flex-col items-center justify-center gap-6">
-          <div className="text-center">
-            <p className="text-base font-medium text-[var(--color-text-secondary)]">
-              Get started
-            </p>
-            <p className="text-sm mt-1 text-[var(--color-text-muted)]">
-              Pick a widget to add to your workspace
-            </p>
-          </div>
-          <div className="flex flex-wrap justify-center gap-3 px-6 max-w-lg">
-            {suggestedWidgets.map((w) => {
-              const Icon = w.icon
-              return (
-                <button
-                  key={w.label}
-                  onClick={w.action}
-                  className="group flex flex-col items-center gap-3 w-36 p-5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] hover:bg-[var(--color-surface-raised)] hover:border-[var(--color-border-strong)] transition-colors duration-150"
-                >
-                  <div
-                    className="p-3 rounded-md bg-[var(--color-bg-tertiary)] transition-colors duration-150"
-                    style={{ color: w.color }}
+      <DndProvider backend={HTML5Backend}>
+        <div className="flex flex-col h-full">
+          <div className="flex-1 flex flex-col items-center justify-center gap-6">
+            <div className="text-center">
+              <p className="text-base font-medium text-[var(--color-text-secondary)]">
+                Get started
+              </p>
+              <p className="text-sm mt-1 text-[var(--color-text-muted)]">
+                Pick a widget to add to your workspace
+              </p>
+            </div>
+            <div className="flex flex-wrap justify-center gap-3 px-6 max-w-lg">
+              {suggestedWidgets.map((w) => {
+                const Icon = w.icon
+                return (
+                  <button
+                    key={w.label}
+                    onClick={w.action}
+                    className="group flex flex-col items-center gap-3 w-36 p-5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] hover:bg-[var(--color-surface-raised)] hover:border-[var(--color-border-strong)] transition-colors duration-150"
                   >
-                    <Icon size={24} />
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-[var(--color-text-primary)]">
-                      {w.label}
-                    </p>
-                    <p className="text-xs mt-0.5 text-[var(--color-text-muted)]">
-                      {w.description}
-                    </p>
-                  </div>
-                </button>
-              )
-            })}
+                    <div
+                      className="p-3 rounded-md bg-[var(--color-bg-tertiary)] transition-colors duration-150"
+                      style={{ color: w.color }}
+                    >
+                      <Icon size={24} />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-[var(--color-text-primary)]">
+                        {w.label}
+                      </p>
+                      <p className="text-xs mt-0.5 text-[var(--color-text-muted)]">
+                        {w.description}
+                      </p>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
           </div>
+          <WidgetTray />
         </div>
-        <WidgetTray />
-      </div>
+      </DndProvider>
     )
   }
 
@@ -216,47 +222,50 @@ export function WidgetArea(): React.JSX.Element {
   const activeFocusId = focusedId && leaves.includes(focusedId) ? focusedId : leaves[0]
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-hidden pt-1 pb-0.5 px-0.5">
-        <Mosaic<string>
-          className=""
-          value={mosaic as MosaicNode<string>}
-          onChange={handleChange}
-          renderTile={(id, path) => {
-            const widgetDef = getWidget(id)
-            if (!widgetDef) return <div />
-            const WidgetComponent = widgetDef.component
-            const isFocused = id === activeFocusId
+    <DndProvider backend={HTML5Backend}>
+      <div className="flex flex-col h-full">
+        <div className="flex-1 overflow-hidden pt-1 pb-0.5 px-0.5">
+          <MosaicWithoutDragDropContext<string>
+            className=""
+            mosaicId={MOSAIC_ID}
+            value={mosaic as MosaicNode<string>}
+            onChange={handleChange}
+            renderTile={(id, path) => {
+              const widgetDef = getWidget(id)
+              if (!widgetDef) return <div />
+              const WidgetComponent = widgetDef.component
+              const isFocused = id === activeFocusId
 
-            return (
-              <MosaicWindow<string>
-                path={path}
-                title=""
-                toolbarControls={<></>}
-                renderToolbar={() => (
-                  <div className="w-full">
-                    <WidgetToolbar
-                      widgetId={id}
-                      isFocused={isFocused}
-                      onFocus={() => setFocusedId(id)}
-                    />
-                  </div>
-                )}
-                className={isFocused ? 'mosaic-window-focused' : ''}
-              >
-                <div
-                  className="h-full overflow-hidden bg-[var(--color-bg-primary)]"
-                  onMouseDown={() => setFocusedId(id)}
+              return (
+                <MosaicWindow<string>
+                  path={path}
+                  title=""
+                  toolbarControls={<></>}
+                  renderToolbar={() => (
+                    <div className="w-full">
+                      <WidgetToolbar
+                        widgetId={id}
+                        isFocused={isFocused}
+                        onFocus={() => setFocusedId(id)}
+                      />
+                    </div>
+                  )}
+                  className={isFocused ? 'mosaic-window-focused' : ''}
                 >
-                  <WidgetComponent instanceId={id} />
-                </div>
-              </MosaicWindow>
-            )
-          }}
-          zeroStateView={<></>}
-        />
+                  <div
+                    className="h-full overflow-hidden bg-[var(--color-bg-primary)]"
+                    onMouseDown={() => setFocusedId(id)}
+                  >
+                    <WidgetComponent instanceId={id} />
+                  </div>
+                </MosaicWindow>
+              )
+            }}
+            zeroStateView={<></>}
+          />
+        </div>
+        <WidgetTray />
       </div>
-      <WidgetTray />
-    </div>
+    </DndProvider>
   )
 }
