@@ -1,16 +1,113 @@
-import { useRef, useState } from 'react'
-import { Allotment } from 'allotment'
-import { FolderOpen } from 'lucide-react'
+import { useState, useCallback } from 'react'
+import { Mosaic, MosaicWindow, MosaicNode } from 'react-mosaic-component'
+import { FolderOpen, Minus, X } from 'lucide-react'
 import { useActiveProject, useWorkspaceStore } from '../stores/workspace-store'
-import { widgetRegistry, terminalPresets, getBaseType } from '../stores/widget-registry'
-import { WidgetPanel } from './WidgetPanel'
+import {
+  widgetRegistry,
+  terminalPresets,
+  getBaseType,
+  getWidget,
+  getInstanceSuffix
+} from '../stores/widget-registry'
 import { WidgetTray } from './WidgetTray'
+import { getMosaicLeaves } from '../../../shared/types'
+
+function WidgetToolbar({
+  widgetId,
+  isFocused,
+  onFocus
+}: {
+  widgetId: string
+  isFocused: boolean
+  onFocus: () => void
+}): React.JSX.Element {
+  const { minimizePanel, removePanel } = useWorkspaceStore()
+  const project = useActiveProject()
+  const widgetDef = getWidget(widgetId)
+
+  if (!widgetDef) {
+    return <div className="h-7 bg-[var(--glass-bg)]" />
+  }
+
+  const Icon = widgetDef.icon
+  const color = widgetDef.color
+
+  let displayLabel = widgetDef.label
+  const suffix = getInstanceSuffix(widgetId)
+  if (suffix && project) {
+    const termState = project.widgetState.terminals[suffix]
+    if (termState) displayLabel = termState.label
+  }
+
+  return (
+    <div className="flex flex-col" onMouseDown={onFocus}>
+      {/* Toolbar row */}
+      <div
+        className="flex items-center h-7 px-2.5 shrink-0 transition-colors duration-200 cursor-move"
+        style={{
+          background: isFocused
+            ? `linear-gradient(180deg, ${color}08, transparent)`
+            : 'rgba(16, 19, 27, 0.6)'
+        }}
+      >
+        <span
+          className="mr-1.5 transition-colors duration-200"
+          style={{ color: isFocused ? color : 'var(--color-text-muted)' }}
+        >
+          <Icon size={12} />
+        </span>
+        <span
+          className="text-[10px] font-semibold uppercase tracking-wider flex-1 truncate transition-colors duration-200"
+          style={{ color: isFocused ? color : 'var(--color-text-secondary)' }}
+        >
+          {displayLabel}
+        </span>
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            minimizePanel(widgetId)
+          }}
+          className="p-0.5 rounded hover:bg-white/8 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-all duration-150 mr-0.5"
+          title="Minimize"
+        >
+          <Minus size={11} />
+        </button>
+        <button
+          onClick={(e) => {
+            e.stopPropagation()
+            removePanel(widgetId)
+          }}
+          className="p-0.5 rounded hover:bg-[var(--color-danger-subtle)] text-[var(--color-text-muted)] hover:text-[var(--color-danger)] transition-all duration-150"
+          title="Close"
+        >
+          <X size={11} />
+        </button>
+      </div>
+
+      {/* Separator */}
+      <div
+        className="h-px shrink-0"
+        style={{
+          background: isFocused
+            ? `linear-gradient(90deg, transparent, ${color}30, transparent)`
+            : 'var(--glass-border)'
+        }}
+      />
+    </div>
+  )
+}
 
 export function WidgetArea(): React.JSX.Element {
   const project = useActiveProject()
-  const { updatePanelSizes, addPanel } = useWorkspaceStore()
-  const sizesRef = useRef<number[]>([])
+  const { updateMosaicLayout, addPanel } = useWorkspaceStore()
   const [focusedId, setFocusedId] = useState<string | null>(null)
+
+  const handleChange = useCallback(
+    (newNode: MosaicNode<string> | null) => {
+      updateMosaicLayout(newNode)
+    },
+    [updateMosaicLayout]
+  )
 
   if (!project) {
     return (
@@ -30,9 +127,9 @@ export function WidgetArea(): React.JSX.Element {
     )
   }
 
-  const { panels, sizes } = project.layout
+  const { mosaic } = project.layout
 
-  if (panels.length === 0) {
+  if (mosaic === null) {
     const descriptions: Record<string, string> = {
       todo: 'Track tasks and stay organized',
       terminal: 'Run commands in your project'
@@ -135,34 +232,50 @@ export function WidgetArea(): React.JSX.Element {
     )
   }
 
-  // Auto-focus first panel if none focused
-  const activeFocusId = focusedId && panels.includes(focusedId) ? focusedId : panels[0]
+  const leaves = getMosaicLeaves(mosaic)
+  const activeFocusId = focusedId && leaves.includes(focusedId) ? focusedId : leaves[0]
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-hidden pt-1.5 pb-0.5 px-0.5">
-        <Allotment
-          key={project.id + ':' + panels.join(',')}
-          defaultSizes={sizes}
-          onChange={(newSizes) => {
-            sizesRef.current = newSizes
+        <Mosaic<string>
+          className=""
+          value={mosaic as MosaicNode<string>}
+          onChange={handleChange}
+          renderTile={(id, path) => {
+            const widgetDef = getWidget(id)
+            if (!widgetDef) return <div />
+            const WidgetComponent = widgetDef.component
+            const isFocused = id === activeFocusId
+
+            return (
+              <MosaicWindow<string>
+                path={path}
+                title=""
+                toolbarControls={<></>}
+                renderToolbar={() => (
+                  <div className="w-full">
+                    <WidgetToolbar
+                      widgetId={id}
+                      isFocused={isFocused}
+                      onFocus={() => setFocusedId(id)}
+                    />
+                  </div>
+                )}
+                className={isFocused ? 'mosaic-window-focused' : ''}
+              >
+                <div
+                  className="h-full overflow-hidden"
+                  style={{ background: 'var(--glass-bg-solid)' }}
+                  onMouseDown={() => setFocusedId(id)}
+                >
+                  <WidgetComponent instanceId={id} />
+                </div>
+              </MosaicWindow>
+            )
           }}
-          onDragEnd={() => {
-            if (sizesRef.current.length > 0) {
-              updatePanelSizes(sizesRef.current)
-            }
-          }}
-        >
-          {panels.map((widgetId) => (
-            <Allotment.Pane key={widgetId} minSize={150}>
-              <WidgetPanel
-                widgetId={widgetId}
-                isFocused={widgetId === activeFocusId}
-                onFocus={() => setFocusedId(widgetId)}
-              />
-            </Allotment.Pane>
-          ))}
-        </Allotment>
+          zeroStateView={<></>}
+        />
       </div>
       <WidgetTray />
     </div>

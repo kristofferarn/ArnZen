@@ -117,22 +117,6 @@
     box-shadow: 0 0 10px var(--color-accent-glow);
   }
 
-  /* ── Allotment sash overrides ── */
-  .sash-container .sash {
-    background: transparent;
-  }
-
-  .sash-container .sash:hover,
-  .sash-container .sash.active {
-    background: rgba(255, 255, 255, 0.08);
-    transition: background 0.15s;
-  }
-
-  /* ── Widget panel base ── */
-  .widget-panel {
-    background: var(--color-bg-secondary);
-  }
-
   .gradient-mesh {
     background:
       radial-gradient(ellipse 80% 60% at 10% 90%, rgba(124, 92, 252, 0.08) 0%, transparent 60%),
@@ -140,4 +124,107 @@
       radial-gradient(ellipse 50% 40% at 50% 50%, rgba(168, 85, 247, 0.04) 0%, transparent 50%),
       var(--color-bg-deep);
   }
+}
+
+/* ── React Mosaic dark theme overrides ──
+   Uses .mosaic parent for higher specificity (3 classes > 2 classes)
+   to guarantee wins over react-mosaic's defaults regardless of load order */
+.mosaic {
+  background: transparent;
+}
+
+.mosaic .mosaic-root {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
+
+.mosaic .mosaic-tile {
+  margin: 3px;
+}
+
+/* Split / resize handles */
+.mosaic .mosaic-split {
+  z-index: 2;
+}
+
+.mosaic .mosaic-split:hover {
+  background: none;
+}
+
+.mosaic .mosaic-split .mosaic-split-line {
+  background: transparent;
+  transition: background 0.15s, box-shadow 0.15s;
+}
+
+.mosaic .mosaic-split:hover .mosaic-split-line {
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 0 4px rgba(124, 92, 252, 0.3);
+}
+
+/* Window chrome */
+.mosaic .mosaic-window,
+.mosaic .mosaic-preview {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+  border: none !important;
+  background: var(--color-bg-secondary) !important;
+}
+
+/* Toolbar */
+.mosaic .mosaic-window .mosaic-window-toolbar,
+.mosaic .mosaic-preview .mosaic-window-toolbar {
+  height: auto !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+.mosaic .mosaic-window .mosaic-window-toolbar.draggable {
+  cursor: default;
+}
+
+/* Remove default title/controls since we use custom renderToolbar */
+.mosaic .mosaic-window .mosaic-window-title,
+.mosaic .mosaic-window .mosaic-window-controls {
+  display: none !important;
+}
+
+/* Body */
+.mosaic .mosaic-window .mosaic-window-body,
+.mosaic .mosaic-preview .mosaic-window-body {
+  background: transparent !important;
+  border-top: none !important;
+}
+
+/* Body overlay during drag */
+.mosaic .mosaic-window .mosaic-window-body-overlay {
+  background: rgba(12, 14, 20, 0.5) !important;
+}
+
+/* Additional actions bar */
+.mosaic .mosaic-window .mosaic-window-additional-actions-bar,
+.mosaic .mosaic-preview .mosaic-window-additional-actions-bar {
+  background: var(--color-bg-secondary) !important;
+}
+
+/* Drop targets */
+.mosaic .mosaic-drop-target .drop-target-container .drop-target {
+  background: rgba(124, 92, 252, 0.08);
+  border: 2px solid var(--color-accent);
+  border-radius: 10px;
+  transition: opacity 150ms;
+}
+
+.mosaic .mosaic-drop-target .drop-target-container .drop-target.drop-target-hover {
+  background: rgba(124, 92, 252, 0.15);
+}
+
+/* Drag preview */
+.mosaic .mosaic-window .mosaic-preview {
+  border: 1px solid var(--color-accent);
+  border-radius: 10px;
+  opacity: 0.8;
 }

@@ -7,11 +7,15 @@ import {
   TaskPriority,
   TodoViewMode,
   TerminalInstanceState,
+  MosaicLayoutNode,
   DEFAULT_WIDGET_STATE,
   DEFAULT_LAYOUT,
   DEFAULT_PROJECT_SETTINGS,
   DEV_SERVER_SUFFIX,
-  PROJECT_COLORS
+  PROJECT_COLORS,
+  getMosaicLeaves,
+  removeMosaicLeaf,
+  addMosaicLeaf
 } from '../../../shared/types'
 import { widgetRegistry, getBaseType, getInstanceSuffix } from './widget-registry'
 
@@ -35,7 +39,7 @@ interface WorkspaceState {
   removePanel: (panelId: string) => void
   minimizePanel: (panelId: string) => void
   restorePanel: (panelId: string) => void
-  updatePanelSizes: (sizes: number[]) => void
+  updateMosaicLayout: (node: MosaicLayoutNode<string> | null) => void
   updateTerminalLabel: (instanceSuffix: string, label: string) => void
 
   // Dev server
@@ -120,6 +124,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
 
         let panelId: string
         let newWidgetState = p.widgetState
+        const existingLeaves = getMosaicLeaves(p.layout.mosaic)
 
         if (widgetDef.allowMultiple) {
           const instanceSuffix = uuid().substring(0, 8)
@@ -141,7 +146,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         } else {
           panelId = widgetId
           if (
-            p.layout.panels.some((pid) => getBaseType(pid) === widgetId) ||
+            existingLeaves.some((pid) => getBaseType(pid) === widgetId) ||
             p.layout.minimized.some((pid) => getBaseType(pid) === widgetId)
           )
             return p
@@ -152,8 +157,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
           widgetState: newWidgetState,
           layout: {
             ...p.layout,
-            panels: [...p.layout.panels, panelId],
-            sizes: [...p.layout.sizes, 1]
+            mosaic: addMosaicLeaf(p.layout.mosaic, panelId)
           }
         }
       })
@@ -177,8 +181,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     set((s) => ({
       projects: s.projects.map((p) => {
         if (p.id !== activeProjectId) return p
-        const idx = p.layout.panels.indexOf(panelId)
-        if (idx === -1) return p
+        if (p.layout.mosaic === null) return p
 
         let newWidgetState = p.widgetState
         if (baseType === 'terminal' && suffix) {
@@ -191,8 +194,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
           widgetState: newWidgetState,
           layout: {
             ...p.layout,
-            panels: p.layout.panels.filter((_, i) => i !== idx),
-            sizes: p.layout.sizes.filter((_, i) => i !== idx)
+            mosaic: removeMosaicLeaf(p.layout.mosaic, panelId)
           }
         }
       })
@@ -205,13 +207,11 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     set((s) => ({
       projects: s.projects.map((p) => {
         if (p.id !== activeProjectId) return p
-        const idx = p.layout.panels.indexOf(panelId)
-        if (idx === -1) return p
+        if (p.layout.mosaic === null) return p
         return {
           ...p,
           layout: {
-            panels: p.layout.panels.filter((_, i) => i !== idx),
-            sizes: p.layout.sizes.filter((_, i) => i !== idx),
+            mosaic: removeMosaicLeaf(p.layout.mosaic, panelId),
             minimized: [...p.layout.minimized, panelId]
           }
         }
@@ -229,8 +229,7 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
         return {
           ...p,
           layout: {
-            panels: [...p.layout.panels, panelId],
-            sizes: [...p.layout.sizes, 1],
+            mosaic: addMosaicLeaf(p.layout.mosaic, panelId),
             minimized: p.layout.minimized.filter((id) => id !== panelId)
           }
         }
@@ -238,12 +237,12 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
     }))
   },
 
-  updatePanelSizes: (sizes) => {
+  updateMosaicLayout: (node) => {
     const { activeProjectId } = get()
     if (!activeProjectId) return
     set((s) => ({
       projects: s.projects.map((p) =>
-        p.id === activeProjectId ? { ...p, layout: { ...p.layout, sizes } } : p
+        p.id === activeProjectId ? { ...p, layout: { ...p.layout, mosaic: node } } : p
       )
     }))
   },

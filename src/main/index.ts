@@ -9,7 +9,8 @@ import {
   Project,
   WidgetLayout,
   WidgetState,
-  WorkspaceConfig
+  WorkspaceConfig,
+  panelsToMosaicTree
 } from '../shared/types'
 import { v4 as uuid } from 'uuid'
 import * as pty from 'node-pty'
@@ -83,15 +84,6 @@ function migrateLayout(
   widgetState: WidgetState,
   rootPath: string
 ): WidgetLayout {
-  if ('activeWidgetId' in layout && !('panels' in layout)) {
-    const openIds = layout.openWidgetIds as string[] | undefined
-    const activeId = layout.activeWidgetId as string
-    const panels = openIds && openIds.length > 0 ? openIds : [activeId]
-    return { panels, sizes: panels.map(() => 1), minimized: [] }
-  }
-
-  const result = layout as unknown as WidgetLayout
-
   // Migrate bare 'terminal' panel IDs to instance IDs
   const migratePanelId = (panelId: string): string => {
     if (panelId === 'terminal') {
@@ -105,10 +97,49 @@ function migrateLayout(
     return panelId
   }
 
-  result.panels = result.panels.map(migratePanelId)
-  result.minimized = result.minimized.map(migratePanelId)
+  // Very old format: activeWidgetId/openWidgetIds
+  if ('activeWidgetId' in layout && !('panels' in layout) && !('mosaic' in layout)) {
+    const openIds = layout.openWidgetIds as string[] | undefined
+    const activeId = layout.activeWidgetId as string
+    const panels = (openIds && openIds.length > 0 ? openIds : [activeId]).map(migratePanelId)
+    return { mosaic: panelsToMosaicTree(panels), minimized: [] }
+  }
 
+  // Old allotment format: panels/sizes arrays
+  if ('panels' in layout && !('mosaic' in layout)) {
+    const panels = (layout.panels as string[]).map(migratePanelId)
+    const minimized = ((layout.minimized as string[] | undefined) || []).map(migratePanelId)
+    return { mosaic: panelsToMosaicTree(panels), minimized }
+  }
+
+  // Current mosaic format — still migrate terminal IDs within the tree
+  const result = layout as unknown as WidgetLayout
+  if (result.mosaic !== null && result.mosaic !== undefined) {
+    result.mosaic = migrateMosaicNode(result.mosaic, migratePanelId)
+  }
+  if (result.minimized) {
+    result.minimized = result.minimized.map(migratePanelId)
+  }
   return result
+}
+
+function migrateMosaicNode(
+  node: unknown,
+  migratePanelId: (id: string) => string
+): WidgetLayout['mosaic'] {
+  if (typeof node === 'string') {
+    return migratePanelId(node)
+  }
+  if (typeof node === 'object' && node !== null && 'direction' in node) {
+    const parent = node as { direction: string; first: unknown; second: unknown; splitPercentage?: number }
+    return {
+      direction: parent.direction as 'row' | 'column',
+      first: migrateMosaicNode(parent.first, migratePanelId)!,
+      second: migrateMosaicNode(parent.second, migratePanelId)!,
+      splitPercentage: parent.splitPercentage
+    }
+  }
+  return null
 }
 
 function readWorkspaceConfig(rootPath: string): WorkspaceConfig | null {

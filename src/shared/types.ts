@@ -36,6 +36,19 @@ export interface TerminalInstanceState {
   initialCommand?: string
 }
 
+// ── Mosaic layout types (structurally compatible with react-mosaic's MosaicNode) ──
+
+export type MosaicDirection = 'row' | 'column'
+
+export interface MosaicParentNode<T> {
+  direction: MosaicDirection
+  first: MosaicLayoutNode<T>
+  second: MosaicLayoutNode<T>
+  splitPercentage?: number
+}
+
+export type MosaicLayoutNode<T> = MosaicParentNode<T> | T
+
 // ── Widget state ──
 
 export interface WidgetState {
@@ -47,8 +60,7 @@ export interface WidgetState {
 }
 
 export interface WidgetLayout {
-  panels: string[]
-  sizes: number[]
+  mosaic: MosaicLayoutNode<string> | null
   minimized: string[]
 }
 
@@ -84,9 +96,74 @@ export const DEFAULT_WIDGET_STATE: WidgetState = {
 }
 
 export const DEFAULT_LAYOUT: WidgetLayout = {
-  panels: [],
-  sizes: [],
+  mosaic: null,
   minimized: []
+}
+
+// ── Mosaic tree helpers (usable in both main and renderer) ──
+
+export function isMosaicParent<T>(node: MosaicLayoutNode<T>): node is MosaicParentNode<T> {
+  return typeof node === 'object' && node !== null && 'direction' in node
+}
+
+export function getMosaicLeaves<T>(node: MosaicLayoutNode<T> | null): T[] {
+  if (node === null) return []
+  if (!isMosaicParent(node)) return [node]
+  return [...getMosaicLeaves(node.first), ...getMosaicLeaves(node.second)]
+}
+
+export function removeMosaicLeaf<T>(
+  node: MosaicLayoutNode<T>,
+  leafId: T
+): MosaicLayoutNode<T> | null {
+  if (!isMosaicParent(node)) {
+    return node === leafId ? null : node
+  }
+  const first = removeMosaicLeaf(node.first, leafId)
+  const second = removeMosaicLeaf(node.second, leafId)
+  if (first === null) return second
+  if (second === null) return first
+  return { ...node, first, second }
+}
+
+export function addMosaicLeaf<T>(
+  current: MosaicLayoutNode<T> | null,
+  newLeaf: T
+): MosaicLayoutNode<T> {
+  if (current === null) return newLeaf
+  const leafCount = getMosaicLeaves(current).length
+  return {
+    direction: 'row' as MosaicDirection,
+    first: current,
+    second: newLeaf,
+    splitPercentage: (leafCount / (leafCount + 1)) * 100
+  }
+}
+
+/** Convert old panels/sizes array format to a mosaic tree */
+export function panelsToMosaicTree(
+  panels: string[],
+  _sizes?: number[]
+): MosaicLayoutNode<string> | null {
+  if (panels.length === 0) return null
+  if (panels.length === 1) return panels[0]
+
+  // Build a balanced left-leaning tree
+  function buildTree(
+    items: string[],
+    direction: MosaicDirection
+  ): MosaicLayoutNode<string> {
+    if (items.length === 1) return items[0]
+    const mid = Math.ceil(items.length / 2)
+    const nextDir: MosaicDirection = direction === 'row' ? 'column' : 'row'
+    return {
+      direction,
+      first: buildTree(items.slice(0, mid), nextDir),
+      second: buildTree(items.slice(mid), nextDir)
+    }
+  }
+
+  return buildTree(panels, 'row')
 }
 
 export const DEFAULT_PROJECT_SETTINGS: ProjectSettings = {

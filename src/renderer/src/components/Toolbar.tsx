@@ -3,7 +3,7 @@ import { FolderOpen, Plus, X, Play, Square, ChevronDown, Pencil } from 'lucide-r
 import { useWorkspaceStore, useActiveProject } from '../stores/workspace-store'
 import { widgetRegistry, terminalPresets, getBaseType } from '../stores/widget-registry'
 import { useDevServerStore } from '../stores/devserver-store'
-import { DEV_SERVER_SUFFIX, DEV_SERVER_PANEL_ID } from '../../../shared/types'
+import { DEV_SERVER_SUFFIX, DEV_SERVER_PANEL_ID, getMosaicLeaves } from '../../../shared/types'
 
 export function Toolbar(): React.JSX.Element {
   const { projects, addProject, setActiveProject, removeProject, addPanel, removePanel, updateDevCommand } = useWorkspaceStore()
@@ -45,8 +45,9 @@ export function Toolbar(): React.JSX.Element {
       closePeek(project.id)
     } else {
       // Clean up legacy panel if it exists from the old implementation
+      const leaves = getMosaicLeaves(project.layout.mosaic)
       if (
-        project.layout.panels.includes(DEV_SERVER_PANEL_ID) ||
+        leaves.includes(DEV_SERVER_PANEL_ID) ||
         project.layout.minimized.includes(DEV_SERVER_PANEL_ID)
       ) {
         removePanel(DEV_SERVER_PANEL_ID)
@@ -88,10 +89,11 @@ export function Toolbar(): React.JSX.Element {
     setShowProjectMenu(false)
   }
 
+  const existingLeaves = project ? getMosaicLeaves(project.layout.mosaic) : []
   const availableWidgets = widgetRegistry.filter((w) => {
     if (w.allowMultiple) return true
     return (
-      !project?.layout.panels.some((p) => getBaseType(p) === w.id) &&
+      !existingLeaves.some((p) => getBaseType(p) === w.id) &&
       !project?.layout.minimized.some((p) => getBaseType(p) === w.id)
     )
   })
