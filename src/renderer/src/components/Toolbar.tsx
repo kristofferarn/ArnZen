@@ -358,7 +358,8 @@ export function Toolbar(): React.JSX.Element {
             key={preset.label}
             onClick={() => addPanel('terminal', {
               label: preset.label,
-              initialCommand: preset.initialCommand
+              initialCommand: preset.initialCommand,
+              color: preset.color
             })}
             disabled={!project}
             className="flex items-center gap-1.5 px-2 h-7 rounded-md text-xs transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--color-bg-hover)]"

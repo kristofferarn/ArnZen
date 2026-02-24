@@ -72,7 +72,7 @@ export function IssueDetailView({
       }
 
       const command = claudeIssueCommand(issue.number)
-      onAssignToClaude(`Claude: #${issue.number}`, command)
+      onAssignToClaude(`#${issue.number}: ${issue.title}`, command)
       onClose()
     } catch (err) {
       setAssignError(err instanceof Error ? err.message : String(err))
@@ -234,33 +234,41 @@ export function IssueDetailView({
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto min-h-0">
-          {/* Body */}
-          {issue.body && (
-            <div className="px-5 py-4 border-b border-[var(--color-border)]">
-              <div className="text-[13px] text-[var(--color-text-primary)] whitespace-pre-wrap leading-relaxed">
-                {issue.body}
-              </div>
+          {loadingDetail ? (
+            <div className="flex items-center justify-center h-32">
+              <RefreshCw size={16} className="animate-spin text-[var(--color-text-muted)]" />
             </div>
-          )}
+          ) : (
+            <>
+              {/* Body */}
+              {issue.body && (
+                <div className="px-5 py-4 border-b border-[var(--color-border)]">
+                  <div className="text-[13px] text-[var(--color-text-primary)] whitespace-pre-wrap leading-relaxed">
+                    {issue.body}
+                  </div>
+                </div>
+              )}
 
-          {/* Comments */}
-          {issue.comments.length > 0 && (
-            <div>
-              <div className="px-5 pt-4 pb-2">
-                <span className="text-[10px] mono text-[var(--color-text-muted)] uppercase tracking-wider">
-                  Comments ({issue.comments.length})
-                </span>
-              </div>
-              {issue.comments.map((comment) => (
-                <IssueComment key={comment.id} comment={comment} />
-              ))}
-            </div>
-          )}
+              {/* Comments */}
+              {issue.comments.length > 0 && (
+                <div>
+                  <div className="px-5 pt-4 pb-2">
+                    <span className="text-[10px] mono text-[var(--color-text-muted)] uppercase tracking-wider">
+                      Comments ({issue.comments.length})
+                    </span>
+                  </div>
+                  {issue.comments.map((comment) => (
+                    <IssueComment key={comment.id} comment={comment} />
+                  ))}
+                </div>
+              )}
 
-          {issue.comments.length === 0 && !issue.body && (
-            <div className="flex items-center justify-center h-24 text-xs text-[var(--color-text-muted)]">
-              No description or comments
-            </div>
+              {issue.comments.length === 0 && !issue.body && (
+                <div className="flex items-center justify-center h-24 text-xs text-[var(--color-text-muted)]">
+                  No description or comments
+                </div>
+              )}
+            </>
           )}
         </div>
 

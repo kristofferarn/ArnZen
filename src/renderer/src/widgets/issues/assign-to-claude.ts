@@ -6,7 +6,7 @@ export function issueBranchName(issueNumber: number, title: string): string {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
     .substring(0, 45)
-  return `issue-${issueNumber}-${slug}`
+  return `${issueNumber}-${slug}`
 }
 
 export function claudeIssueCommand(issueNumber: number): string {

@@ -140,6 +140,8 @@ export interface TerminalInstanceState {
   label: string
   cwd: string
   initialCommand?: string
+  color?: string
+  labelLocked?: boolean
 }
 
 // ── Mosaic layout types (structurally compatible with react-mosaic's MosaicNode) ──

@@ -30,13 +30,16 @@ function WidgetToolbar({
   }
 
   const Icon = widgetDef.icon
-  const color = widgetDef.color
 
   let displayLabel = widgetDef.label
+  let color = widgetDef.color
   const suffix = getInstanceSuffix(widgetId)
   if (suffix && project) {
     const termState = project.widgetState.terminals[suffix]
-    if (termState) displayLabel = termState.label
+    if (termState) {
+      displayLabel = termState.label
+      if (termState.color) color = termState.color
+    }
   }
 
   return (
@@ -48,12 +51,12 @@ function WidgetToolbar({
           background: isFocused
             ? 'var(--color-bg-tertiary)'
             : 'var(--color-bg-secondary)',
-          borderLeft: isFocused ? `2px solid ${color}` : '2px solid transparent'
+          borderLeft: `2px solid ${color}`
         }}
       >
         <span
           className="mr-1.5 transition-colors duration-150"
-          style={{ color: isFocused ? color : 'var(--color-text-muted)' }}
+          style={{ color: color }}
         >
           <Icon size={12} />
         </span>
@@ -160,7 +163,8 @@ export function WidgetArea(): React.JSX.Element {
         action: () =>
           addPanel('terminal', {
             label: terminalPresets[0].label,
-            initialCommand: terminalPresets[0].initialCommand
+            initialCommand: terminalPresets[0].initialCommand,
+            color: terminalPresets[0].color
           })
       }
     ]

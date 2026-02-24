@@ -3,6 +3,7 @@ import { AlertCircle, Plus, RefreshCw, Search } from 'lucide-react'
 import { useActiveProject, useWorkspaceStore } from '../../stores/workspace-store'
 import { useGitInfo } from '../../stores/git-store'
 import { useIssues, useIssuesStore, IssueStateFilter } from '../../stores/issues-store'
+import { terminalPresets } from '../../stores/widget-registry'
 import { IssueRow } from './IssueRow'
 import { IssueCreateForm } from './IssueCreateForm'
 import { IssueDetailView } from './IssueDetailView'
@@ -96,7 +97,13 @@ export function IssuesWidget(): React.JSX.Element {
 
   const handleAssignToClaude = useCallback(
     (label: string, initialCommand: string) => {
-      useWorkspaceStore.getState().addPanel('terminal', { label, initialCommand })
+      const preset = terminalPresets.find((p) => p.label === 'Claude Code')
+      useWorkspaceStore.getState().addPanel('terminal', {
+        label,
+        initialCommand,
+        color: preset?.color,
+        labelLocked: true
+      })
     },
     []
   )

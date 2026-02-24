@@ -165,12 +165,20 @@ export const useIssuesStore = create<IssuesState>((set, get) => ({
   },
 
   selectIssue: async (projectId, rootPath, issueNumber) => {
+    // Build a placeholder detail from list data so the dialog opens instantly
+    const current = getInfo(get(), projectId)
+    const listItem = current.issues.find((i) => i.number === issueNumber)
+    const placeholder: IssueDetail | null = listItem
+      ? { ...listItem, milestone: null, comments: [] }
+      : current.issueDetail // keep existing detail if refreshing
+
     set((s) => ({
       projects: {
         ...s.projects,
         [projectId]: {
           ...getInfo(s, projectId),
           selectedIssue: issueNumber,
+          issueDetail: placeholder,
           loadingDetail: true,
           error: null
         }
