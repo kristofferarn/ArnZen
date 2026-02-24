@@ -5,7 +5,7 @@ import { GitHubIssue, GitHubIssueComment } from '../../../../shared/types'
 import { IssueComment } from './IssueComment'
 import { issueBranchName, issuePrTitle, claudeIssueCommand } from './assign-to-claude'
 
-function branchMatchesIssue(branch: string, issueNumber: number): boolean {
+export function branchMatchesIssue(branch: string, issueNumber: number): boolean {
   // Match patterns like feat/42-..., fix/42-..., issue-42-..., #42, or number preceded by separator
   const patterns = [
     new RegExp(`^\\w+/${issueNumber}-`),
