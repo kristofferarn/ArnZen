@@ -626,11 +626,34 @@ app.whenReady().then(() => {
 
   createWindow()
 
-  // Auto-update: check for updates silently in production
+  // Auto-update: check for updates, let user trigger download/install
   if (!is.dev) {
-    autoUpdater.autoDownload = true
-    autoUpdater.autoInstallOnAppQuit = true
-    autoUpdater.checkForUpdatesAndNotify()
+    autoUpdater.autoDownload = false
+    autoUpdater.autoInstallOnAppQuit = false
+
+    autoUpdater.on('update-available', (info) => {
+      const win = BrowserWindow.getAllWindows()[0]
+      if (win && !win.isDestroyed()) {
+        win.webContents.send('updater:update-available', info.version)
+      }
+    })
+
+    autoUpdater.on('update-downloaded', () => {
+      const win = BrowserWindow.getAllWindows()[0]
+      if (win && !win.isDestroyed()) {
+        win.webContents.send('updater:update-downloaded')
+      }
+    })
+
+    ipcMain.on('updater:download', () => {
+      autoUpdater.downloadUpdate()
+    })
+
+    ipcMain.on('updater:install', () => {
+      autoUpdater.quitAndInstall()
+    })
+
+    autoUpdater.checkForUpdates()
   }
 
   app.on('activate', function () {

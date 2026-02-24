@@ -76,7 +76,21 @@ const api = {
   readDir: (dirPath: string): Promise<DirEntry[]> =>
     ipcRenderer.invoke('fs:read-dir', dirPath),
   readFile: (filePath: string): Promise<{ content: string } | { error: string }> =>
-    ipcRenderer.invoke('fs:read-file', filePath)
+    ipcRenderer.invoke('fs:read-file', filePath),
+
+  // Auto-updater
+  onUpdateAvailable: (callback: (version: string) => void): (() => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, version: string): void => callback(version)
+    ipcRenderer.on('updater:update-available', handler)
+    return () => { ipcRenderer.removeListener('updater:update-available', handler) }
+  },
+  onUpdateDownloaded: (callback: () => void): (() => void) => {
+    const handler = (): void => callback()
+    ipcRenderer.on('updater:update-downloaded', handler)
+    return () => { ipcRenderer.removeListener('updater:update-downloaded', handler) }
+  },
+  updaterDownload: (): void => ipcRenderer.send('updater:download'),
+  updaterInstall: (): void => ipcRenderer.send('updater:install')
 }
 
 if (process.contextIsolated) {

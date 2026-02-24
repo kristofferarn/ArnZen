@@ -40,6 +40,12 @@ interface ArnZenAPI {
   // Filesystem (editor)
   readDir: (dirPath: string) => Promise<DirEntry[]>
   readFile: (filePath: string) => Promise<{ content: string } | { error: string }>
+
+  // Auto-updater
+  onUpdateAvailable: (callback: (version: string) => void) => () => void
+  onUpdateDownloaded: (callback: () => void) => () => void
+  updaterDownload: () => void
+  updaterInstall: () => void
 }
 
 declare global {
