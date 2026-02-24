@@ -41,7 +41,7 @@ export function TaskListView(): React.JSX.Element {
           <div key={status} className="mb-3">
             <button
               onClick={() => toggleSection(status)}
-              className="flex items-center gap-2 px-2 py-1.5 w-full text-left hover:bg-white/3 rounded-lg transition-all duration-150"
+              className="flex items-center gap-2 px-2 py-1.5 w-full text-left hover:bg-[var(--color-bg-hover)] rounded-md transition-colors duration-150"
             >
               {collapsed ? (
                 <ChevronRight size={12} className="text-[var(--color-text-muted)]" />
@@ -53,12 +53,12 @@ export function TaskListView(): React.JSX.Element {
                 style={{ backgroundColor: config.color }}
               />
               <span
-                className="text-xs font-semibold uppercase tracking-wider"
+                className="mono text-[10px] font-semibold uppercase tracking-wider"
                 style={{ color: config.color }}
               >
                 {config.label}
               </span>
-              <span className="text-[10px] text-[var(--color-text-muted)] ml-1">
+              <span className="mono text-[10px] text-[var(--color-text-muted)] ml-1">
                 {tasksInGroup.length}
               </span>
             </button>

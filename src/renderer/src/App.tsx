@@ -37,7 +37,7 @@ function App(): React.JSX.Element {
   }, [projects, activeProjectId])
 
   return (
-    <div className="flex flex-col h-screen gradient-mesh">
+    <div className="flex flex-col h-screen bg-[var(--color-bg-deep)]">
       <TitleBar />
       <Toolbar />
       <DevServerPeek />

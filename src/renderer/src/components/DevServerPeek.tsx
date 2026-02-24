@@ -62,27 +62,27 @@ function DevServerPeekPanel({ projectId, rootPath, devCommand, onClose, onRunnin
       fontSize: 13,
       lineHeight: 1.3,
       theme: {
-        background: '#0a0a0f',
-        foreground: '#d4d4d8',
-        cursor: '#a5b4fc',
-        cursorAccent: '#0a0a0f',
-        selectionBackground: '#6366f150',
-        black: '#18181b',
-        red: '#ef4444',
-        green: '#10b981',
-        yellow: '#f59e0b',
-        blue: '#6366f1',
-        magenta: '#ec4899',
-        cyan: '#06b6d4',
-        white: '#d4d4d8',
-        brightBlack: '#52525b',
-        brightRed: '#f87171',
-        brightGreen: '#34d399',
-        brightYellow: '#fbbf24',
-        brightBlue: '#818cf8',
-        brightMagenta: '#f472b6',
-        brightCyan: '#22d3ee',
-        brightWhite: '#fafafa'
+        background: '#1a1c24',
+        foreground: '#dad5cd',
+        cursor: '#c9956b',
+        cursorAccent: '#1a1c24',
+        selectionBackground: '#c9956b30',
+        black: '#24272f',
+        red: '#c97070',
+        green: '#7ab88a',
+        yellow: '#c9a856',
+        blue: '#7ba5b8',
+        magenta: '#b87a8e',
+        cyan: '#6aabb8',
+        white: '#dad5cd',
+        brightBlack: '#615c54',
+        brightRed: '#d68585',
+        brightGreen: '#8eca9c',
+        brightYellow: '#d6ba6a',
+        brightBlue: '#8eb8ca',
+        brightMagenta: '#ca8ea0',
+        brightCyan: '#7ebeca',
+        brightWhite: '#f0ebe3'
       }
     })
 
@@ -189,21 +189,21 @@ function DevServerPeekPanel({ projectId, rootPath, devCommand, onClose, onRunnin
   }, [setupTerminal])
 
   return (
-    <div className="h-[200px] flex flex-col border-b border-[var(--glass-border)] glass-solid shrink-0">
-      <div className="flex items-center justify-between h-7 px-3 border-b border-[var(--glass-border)] shrink-0">
-        <span className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider">
+    <div className="h-[200px] flex flex-col border-b border-[var(--color-border)] bg-[var(--color-bg-primary)] shrink-0">
+      <div className="flex items-center justify-between h-7 px-3 border-b border-[var(--color-border)] shrink-0">
+        <span className="mono text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider">
           Dev Server
         </span>
         <button
           onClick={onClose}
-          className="p-0.5 rounded-md text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-white/5 transition-all duration-150"
+          className="p-0.5 rounded text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)] transition-colors duration-150"
           title="Close peek"
         >
           <X size={12} />
         </button>
       </div>
       <div className="flex-1 overflow-hidden">
-        <div ref={containerRef} className="h-full w-full p-1 bg-[#0a0a0f]" />
+        <div ref={containerRef} className="h-full w-full p-1 bg-[#1a1c24]" />
       </div>
     </div>
   )

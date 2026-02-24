@@ -26,7 +26,7 @@ function WidgetToolbar({
   const widgetDef = getWidget(widgetId)
 
   if (!widgetDef) {
-    return <div className="h-7 bg-[var(--glass-bg)]" />
+    return <div className="h-7 bg-[var(--color-bg-secondary)]" />
   }
 
   const Icon = widgetDef.icon
@@ -43,22 +43,23 @@ function WidgetToolbar({
     <div className="flex flex-col" onMouseDown={onFocus}>
       {/* Toolbar row */}
       <div
-        className="flex items-center h-7 px-2.5 shrink-0 transition-colors duration-200 cursor-move"
+        className="flex items-center h-7 px-2.5 shrink-0 transition-colors duration-150 cursor-move"
         style={{
           background: isFocused
-            ? `linear-gradient(180deg, ${color}08, transparent)`
-            : 'rgba(16, 19, 27, 0.6)'
+            ? 'var(--color-bg-tertiary)'
+            : 'var(--color-bg-secondary)',
+          borderLeft: isFocused ? `2px solid ${color}` : '2px solid transparent'
         }}
       >
         <span
-          className="mr-1.5 transition-colors duration-200"
+          className="mr-1.5 transition-colors duration-150"
           style={{ color: isFocused ? color : 'var(--color-text-muted)' }}
         >
           <Icon size={12} />
         </span>
         <span
-          className="text-[10px] font-semibold uppercase tracking-wider flex-1 truncate transition-colors duration-200"
-          style={{ color: isFocused ? color : 'var(--color-text-secondary)' }}
+          className="mono text-[10px] font-semibold uppercase tracking-wider flex-1 truncate transition-colors duration-150"
+          style={{ color: isFocused ? 'var(--color-text-primary)' : 'var(--color-text-secondary)' }}
         >
           {displayLabel}
         </span>
@@ -67,7 +68,7 @@ function WidgetToolbar({
             e.stopPropagation()
             minimizePanel(widgetId)
           }}
-          className="p-0.5 rounded hover:bg-white/8 text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-all duration-150 mr-0.5"
+          className="p-0.5 rounded hover:bg-[var(--color-bg-hover)] text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] transition-colors duration-150 mr-0.5"
           title="Minimize"
         >
           <Minus size={11} />
@@ -77,7 +78,7 @@ function WidgetToolbar({
             e.stopPropagation()
             removePanel(widgetId)
           }}
-          className="p-0.5 rounded hover:bg-[var(--color-danger-subtle)] text-[var(--color-text-muted)] hover:text-[var(--color-danger)] transition-all duration-150"
+          className="p-0.5 rounded hover:bg-[var(--color-danger-subtle)] text-[var(--color-text-muted)] hover:text-[var(--color-danger)] transition-colors duration-150"
           title="Close"
         >
           <X size={11} />
@@ -85,14 +86,7 @@ function WidgetToolbar({
       </div>
 
       {/* Separator */}
-      <div
-        className="h-px shrink-0"
-        style={{
-          background: isFocused
-            ? `linear-gradient(90deg, transparent, ${color}30, transparent)`
-            : 'var(--glass-border)'
-        }}
-      />
+      <div className="h-px shrink-0 bg-[var(--color-border)]" />
     </div>
   )
 }
@@ -112,7 +106,7 @@ export function WidgetArea(): React.JSX.Element {
   if (!project) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center gap-4 text-[var(--color-text-muted)]">
-        <div className="p-5 rounded-2xl bg-white/3 border border-[var(--glass-border)]">
+        <div className="p-5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)]">
           <FolderOpen size={40} strokeWidth={1.5} />
         </div>
         <div className="text-center">
@@ -158,20 +152,11 @@ export function WidgetArea(): React.JSX.Element {
                 <button
                   key={w.id}
                   onClick={() => addPanel(w.id)}
-                  className="group flex flex-col items-center gap-3 w-36 p-5 rounded-xl bg-white/3 border border-[var(--glass-border)] hover:bg-white/6 hover:border-white/10 transition-all duration-200"
+                  className="group flex flex-col items-center gap-3 w-36 p-5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] hover:bg-[var(--color-surface-raised)] hover:border-[var(--color-border-strong)] transition-colors duration-150"
                 >
                   <div
-                    className="p-3 rounded-xl bg-white/4 transition-all duration-200"
-                    style={{
-                      boxShadow: `0 0 0 rgba(0,0,0,0)`,
-                      color: w.color
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.boxShadow = `0 0 20px ${w.color}25`
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.boxShadow = `0 0 0 rgba(0,0,0,0)`
-                    }}
+                    className="p-3 rounded-md bg-[var(--color-bg-tertiary)] transition-colors duration-150"
+                    style={{ color: w.color }}
                   >
                     <Icon size={24} />
                   </div>
@@ -197,20 +182,11 @@ export function WidgetArea(): React.JSX.Element {
                       initialCommand: preset.initialCommand
                     })
                   }
-                  className="group flex flex-col items-center gap-3 w-36 p-5 rounded-xl bg-white/3 border border-[var(--glass-border)] hover:bg-white/6 hover:border-white/10 transition-all duration-200"
+                  className="group flex flex-col items-center gap-3 w-36 p-5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] hover:bg-[var(--color-surface-raised)] hover:border-[var(--color-border-strong)] transition-colors duration-150"
                 >
                   <div
-                    className="p-3 rounded-xl bg-white/4 transition-all duration-200"
-                    style={{
-                      boxShadow: `0 0 0 rgba(0,0,0,0)`,
-                      color: preset.color
-                    }}
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.boxShadow = `0 0 20px ${preset.color}25`
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.boxShadow = `0 0 0 rgba(0,0,0,0)`
-                    }}
+                    className="p-3 rounded-md bg-[var(--color-bg-tertiary)] transition-colors duration-150"
+                    style={{ color: preset.color }}
                   >
                     <PresetIcon size={24} />
                   </div>
@@ -237,7 +213,7 @@ export function WidgetArea(): React.JSX.Element {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-hidden pt-1.5 pb-0.5 px-0.5">
+      <div className="flex-1 overflow-hidden pt-1 pb-0.5 px-0.5">
         <Mosaic<string>
           className=""
           value={mosaic as MosaicNode<string>}
@@ -265,8 +241,7 @@ export function WidgetArea(): React.JSX.Element {
                 className={isFocused ? 'mosaic-window-focused' : ''}
               >
                 <div
-                  className="h-full overflow-hidden"
-                  style={{ background: 'var(--glass-bg-solid)' }}
+                  className="h-full overflow-hidden bg-[var(--color-bg-primary)]"
                   onMouseDown={() => setFocusedId(id)}
                 >
                   <WidgetComponent instanceId={id} />

@@ -46,10 +46,10 @@ export function TaskCard({
 
   return (
     <div
-      className={`group rounded-xl transition-all duration-150 ${
+      className={`group rounded-md transition-colors duration-150 ${
         variant === 'kanban'
-          ? 'bg-white/4 border border-[var(--glass-border)] p-3 mb-2 hover:border-white/10'
-          : 'hover:bg-white/4 px-3 py-2.5'
+          ? 'bg-[var(--color-surface)] border border-[var(--color-border)] p-3 mb-2 hover:border-[var(--color-border-strong)]'
+          : 'hover:bg-[var(--color-bg-hover)] px-3 py-2.5'
       } ${task.status === 'done' ? 'opacity-60' : ''}`}
       draggable={draggable}
       onDragStart={onDragStart}
@@ -70,7 +70,7 @@ export function TaskCard({
             const next = STATUS_CYCLE[(STATUS_CYCLE.indexOf(task.status) + 1) % STATUS_CYCLE.length]
             updateTask(task.id, { status: next })
           }}
-          className="w-3.5 h-3.5 rounded-full shrink-0 border-2 transition-all duration-200"
+          className="w-3.5 h-3.5 rounded-full shrink-0 border-2 transition-colors duration-150"
           style={{
             borderColor: statusColor,
             backgroundColor: task.status === 'done' ? statusColor : 'transparent'
@@ -123,7 +123,7 @@ export function TaskCard({
         {/* Delete */}
         <button
           onClick={() => removeTask(task.id)}
-          className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-[var(--color-danger-subtle)] text-[var(--color-text-muted)] hover:text-[var(--color-danger)] transition-all duration-150"
+          className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-[var(--color-danger-subtle)] text-[var(--color-text-muted)] hover:text-[var(--color-danger)] transition-all duration-150"
         >
           <Trash2 size={13} />
         </button>
@@ -137,7 +137,7 @@ export function TaskCard({
             onChange={(e) => updateTask(task.id, { description: e.target.value })}
             placeholder="Add a description..."
             rows={2}
-            className="w-full bg-white/4 text-xs text-[var(--color-text-secondary)] px-2.5 py-2 rounded-lg border border-[var(--glass-border)] outline-none resize-none focus:border-[var(--color-accent)]/30 transition-all duration-200 placeholder:text-[var(--color-text-muted)]"
+            className="w-full bg-[var(--color-bg-tertiary)] text-xs text-[var(--color-text-secondary)] px-2.5 py-2 rounded border border-[var(--color-border)] outline-none resize-none focus:border-[var(--color-accent)]/40 transition-colors duration-150 placeholder:text-[var(--color-text-muted)]"
           />
 
           <div className="flex items-center gap-3">
@@ -150,9 +150,9 @@ export function TaskCard({
                 <button
                   key={p}
                   onClick={() => updateTask(task.id, { priority: p })}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium transition-all duration-150 ${
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-medium mono transition-colors duration-150 ${
                     task.priority === p
-                      ? 'bg-white/10'
+                      ? 'bg-[var(--color-bg-hover)]'
                       : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)]'
                   }`}
                   style={task.priority === p ? { color: TASK_PRIORITY_CONFIG[p].color } : undefined}

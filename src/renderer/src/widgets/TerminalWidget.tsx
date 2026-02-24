@@ -38,27 +38,27 @@ export function TerminalWidget({ instanceId }: TerminalWidgetProps): React.JSX.E
       fontSize: 13,
       lineHeight: 1.3,
       theme: {
-        background: '#0a0a0f',
-        foreground: '#d4d4d8',
-        cursor: '#a5b4fc',
-        cursorAccent: '#0a0a0f',
-        selectionBackground: '#6366f150',
-        black: '#18181b',
-        red: '#ef4444',
-        green: '#10b981',
-        yellow: '#f59e0b',
-        blue: '#6366f1',
-        magenta: '#ec4899',
-        cyan: '#06b6d4',
-        white: '#d4d4d8',
-        brightBlack: '#52525b',
-        brightRed: '#f87171',
-        brightGreen: '#34d399',
-        brightYellow: '#fbbf24',
-        brightBlue: '#818cf8',
-        brightMagenta: '#f472b6',
-        brightCyan: '#22d3ee',
-        brightWhite: '#fafafa'
+        background: '#1a1c24',
+        foreground: '#dad5cd',
+        cursor: '#c9956b',
+        cursorAccent: '#1a1c24',
+        selectionBackground: '#c9956b30',
+        black: '#24272f',
+        red: '#c97070',
+        green: '#7ab88a',
+        yellow: '#c9a856',
+        blue: '#7ba5b8',
+        magenta: '#b87a8e',
+        cyan: '#6aabb8',
+        white: '#dad5cd',
+        brightBlack: '#615c54',
+        brightRed: '#d68585',
+        brightGreen: '#8eca9c',
+        brightYellow: '#d6ba6a',
+        brightBlue: '#8eb8ca',
+        brightMagenta: '#ca8ea0',
+        brightCyan: '#7ebeca',
+        brightWhite: '#f0ebe3'
       }
     })
 
@@ -202,7 +202,7 @@ export function TerminalWidget({ instanceId }: TerminalWidgetProps): React.JSX.E
   }
 
   return (
-    <div className="h-full w-full p-2 bg-[#0a0a0f]">
+    <div className="h-full w-full p-2 bg-[#1a1c24]">
       <div ref={containerRef} className="h-full w-full" />
     </div>
   )

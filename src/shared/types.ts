@@ -17,15 +17,15 @@ export interface Task {
 export const TASK_STATUSES: TaskStatus[] = ['todo', 'in-progress', 'done']
 
 export const TASK_STATUS_CONFIG: Record<TaskStatus, { label: string; color: string }> = {
-  todo: { label: 'To Do', color: '#9ba1b0' },
-  'in-progress': { label: 'In Progress', color: '#f59e0b' },
-  done: { label: 'Done', color: '#34d399' }
+  todo: { label: 'To Do', color: '#938e85' },
+  'in-progress': { label: 'In Progress', color: '#c9a856' },
+  done: { label: 'Done', color: '#7ab88a' }
 }
 
 export const TASK_PRIORITY_CONFIG: Record<TaskPriority, { label: string; color: string }> = {
-  low: { label: 'Low', color: '#5c6275' },
-  medium: { label: 'Medium', color: '#6366f1' },
-  high: { label: 'High', color: '#f87171' }
+  low: { label: 'Low', color: '#615c54' },
+  medium: { label: 'Medium', color: '#8088a0' },
+  high: { label: 'High', color: '#c97070' }
 }
 
 // ── Terminal types ──
@@ -174,12 +174,12 @@ export const DEV_SERVER_SUFFIX = 'devserver'
 export const DEV_SERVER_PANEL_ID = `terminal:${DEV_SERVER_SUFFIX}`
 
 export const PROJECT_COLORS = [
-  '#6366f1', // indigo
-  '#ec4899', // pink
-  '#f59e0b', // amber
-  '#10b981', // emerald
-  '#3b82f6', // blue
-  '#ef4444', // red
-  '#8b5cf6', // violet
-  '#06b6d4' // cyan
+  '#c9956b', // copper
+  '#7ab88a', // sage
+  '#8088a0', // slate
+  '#c9a856', // ochre
+  '#7ba5b8', // teal
+  '#b87a8e', // wine
+  '#a0956b', // sand
+  '#8a7ab8' // dusk
 ]

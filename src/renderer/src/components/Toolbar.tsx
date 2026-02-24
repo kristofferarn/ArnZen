@@ -99,12 +99,12 @@ export function Toolbar(): React.JSX.Element {
   })
 
   return (
-    <div className="relative z-10 flex items-center h-10 glass border-b border-[var(--glass-border)] px-3 gap-2 app-no-drag">
+    <div className="relative z-10 flex items-center h-10 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] px-3 gap-2 app-no-drag">
       {/* Project selector */}
       <div className="relative" ref={projectMenuRef}>
         <button
           onClick={() => setShowProjectMenu(!showProjectMenu)}
-          className="flex items-center gap-2 px-3 h-7 rounded-lg text-sm hover:bg-white/5 transition-all duration-200"
+          className="flex items-center gap-2 px-2.5 h-7 rounded-md text-sm hover:bg-[var(--color-bg-hover)] transition-colors duration-150"
         >
           <FolderOpen size={15} style={project ? { color: project.color } : undefined} className={project ? '' : 'text-[var(--color-text-muted)]'} />
           {project ? (
@@ -117,7 +117,7 @@ export function Toolbar(): React.JSX.Element {
         </button>
 
         {showProjectMenu && (
-          <div className="absolute top-full left-0 mt-1 w-56 py-1 rounded-xl glass-solid border border-[var(--glass-border)] shadow-xl z-50">
+          <div className="absolute top-full left-0 mt-1 w-56 py-1 rounded-md bg-[var(--color-surface-overlay)] border border-[var(--color-border-strong)] shadow-lg z-50">
             {projects.map((p) => (
               <button
                 key={p.id}
@@ -125,7 +125,7 @@ export function Toolbar(): React.JSX.Element {
                   setActiveProject(p.id)
                   setShowProjectMenu(false)
                 }}
-                className="flex items-center gap-2.5 w-full px-3 py-1.5 text-sm hover:bg-white/5 transition-all duration-150 group"
+                className="flex items-center gap-2.5 w-full px-3 py-1.5 text-sm hover:bg-[var(--color-bg-hover)] transition-colors duration-150 group"
               >
                 <FolderOpen size={14} className="shrink-0" style={{ color: p.color }} />
                 <span
@@ -142,17 +142,17 @@ export function Toolbar(): React.JSX.Element {
                     e.stopPropagation()
                     removeProject(p.id)
                   }}
-                  className="opacity-0 group-hover:opacity-100 p-0.5 rounded-md hover:bg-[var(--color-danger-subtle)] hover:text-[var(--color-danger)] text-[var(--color-text-muted)] transition-all duration-150"
+                  className="opacity-0 group-hover:opacity-100 p-0.5 rounded hover:bg-[var(--color-danger-subtle)] hover:text-[var(--color-danger)] text-[var(--color-text-muted)] transition-all duration-150"
                 >
                   <X size={12} />
                 </span>
               </button>
             ))}
 
-            <div className="border-t border-[var(--glass-border)] mt-1 pt-1">
+            <div className="border-t border-[var(--color-border)] mt-1 pt-1">
               <button
                 onClick={handleAddProject}
-                className="flex items-center gap-2.5 w-full px-3 py-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-white/5 transition-all duration-150"
+                className="flex items-center gap-2.5 w-full px-3 py-1.5 text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)] transition-colors duration-150"
               >
                 <Plus size={14} />
                 <span>Add project</span>
@@ -163,7 +163,7 @@ export function Toolbar(): React.JSX.Element {
       </div>
 
       {/* Divider */}
-      <div className="w-px h-4 bg-[var(--glass-border)]" />
+      <div className="w-px h-4 bg-[var(--color-border)]" />
 
       {/* Dev server toggle */}
       <div className="relative" ref={devPopoverRef}>
@@ -171,11 +171,11 @@ export function Toolbar(): React.JSX.Element {
           <button
             onClick={handleToggleDevServer}
             disabled={!project}
-            className={`flex items-center gap-1.5 pl-2.5 h-7 text-sm transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
+            className={`flex items-center gap-1.5 pl-2.5 h-7 text-sm transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${
               isDevServerRunning
-                ? 'text-[#34d399] bg-[#34d399]/10 hover:bg-[#34d399]/15'
-                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-white/5'
-            } ${!isDevServerRunning ? 'pr-1.5 rounded-l-lg' : 'rounded-l-lg'}`}
+                ? 'text-[var(--color-success)] bg-[var(--color-success-subtle)]'
+                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]'
+            } ${!isDevServerRunning ? 'pr-1.5 rounded-l-md' : 'rounded-l-md'}`}
             title={isDevServerRunning ? 'Stop dev server' : 'Start dev server'}
           >
             {isDevServerRunning ? (
@@ -187,18 +187,18 @@ export function Toolbar(): React.JSX.Element {
           {isDevServerRunning ? (
             <button
               onClick={() => project && togglePeek(project.id)}
-              className={`flex items-center gap-1 pr-1.5 h-7 text-sm transition-all duration-200 ${
+              className={`flex items-center gap-1 pr-1.5 h-7 text-sm transition-colors duration-150 ${
                 isPeekOpen
-                  ? 'text-[#34d399] bg-[#34d399]/10 hover:bg-[#34d399]/15'
-                  : 'text-[#34d399]/70 bg-[#34d399]/10 hover:text-[#34d399] hover:bg-[#34d399]/15'
+                  ? 'text-[var(--color-success)] bg-[var(--color-success-subtle)]'
+                  : 'text-[var(--color-success)]/70 bg-[var(--color-success-subtle)] hover:text-[var(--color-success)]'
               }`}
               title={isPeekOpen ? 'Hide dev server output' : 'Show dev server output'}
             >
-              <span>Dev</span>
-              <span className="w-1.5 h-1.5 rounded-full bg-[#34d399] animate-pulse" />
+              <span className="mono text-xs">Dev</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-success)] animate-pulse" />
             </button>
           ) : (
-            <span className="pr-1.5 h-7 flex items-center text-sm text-[var(--color-text-muted)]">Dev</span>
+            <span className="pr-1.5 h-7 flex items-center text-sm text-[var(--color-text-muted)] mono text-xs">Dev</span>
           )}
           <button
             onClick={() => {
@@ -208,10 +208,10 @@ export function Toolbar(): React.JSX.Element {
               setEditingCommand(false)
             }}
             disabled={!project}
-            className={`flex items-center px-1 h-7 rounded-r-lg text-sm transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed ${
+            className={`flex items-center px-1 h-7 rounded-r-md text-sm transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed ${
               isDevServerRunning
-                ? 'text-[#34d399]/60 hover:text-[#34d399] hover:bg-[#34d399]/15'
-                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-white/5'
+                ? 'text-[var(--color-success)]/60 hover:text-[var(--color-success)] hover:bg-[var(--color-success-subtle)]'
+                : 'text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)]'
             }`}
           >
             <ChevronDown size={12} />
@@ -219,8 +219,8 @@ export function Toolbar(): React.JSX.Element {
         </div>
 
         {showDevPopover && (
-          <div className="absolute top-full left-0 mt-1 w-64 py-2 px-3 rounded-xl glass-solid border border-[var(--glass-border)] shadow-xl z-50">
-            <div className="text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] mb-1.5">
+          <div className="absolute top-full left-0 mt-1 w-64 py-2 px-3 rounded-md bg-[var(--color-surface-overlay)] border border-[var(--color-border-strong)] shadow-lg z-50">
+            <div className="mono text-[10px] uppercase tracking-wider text-[var(--color-text-muted)] mb-1.5">
               Dev command
             </div>
             {editingCommand ? (
@@ -245,12 +245,12 @@ export function Toolbar(): React.JSX.Element {
                       setEditingCommand(false)
                     }
                   }}
-                  className="flex-1 bg-white/5 border border-[var(--glass-border)] rounded-md px-2 py-1 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-accent)]/40 transition-colors"
+                  className="flex-1 bg-[var(--color-bg-tertiary)] border border-[var(--color-border)] rounded px-2 py-1 text-sm text-[var(--color-text-primary)] outline-none focus:border-[var(--color-accent)]/50 transition-colors mono"
                   placeholder="npm run dev"
                 />
                 <button
                   type="submit"
-                  className="px-2 py-1 rounded-md text-xs bg-[var(--color-accent)]/10 text-[var(--color-accent)] hover:bg-[var(--color-accent)]/20 transition-colors"
+                  className="px-2 py-1 rounded text-xs bg-[var(--color-accent-subtle)] text-[var(--color-accent)] hover:bg-[var(--color-accent-muted)] transition-colors mono"
                 >
                   Save
                 </button>
@@ -263,7 +263,7 @@ export function Toolbar(): React.JSX.Element {
                 }}
                 className="flex items-center gap-2 w-full text-left group"
               >
-                <code className="flex-1 text-sm text-[var(--color-text-secondary)] bg-white/5 px-2 py-1 rounded-md truncate">
+                <code className="mono flex-1 text-sm text-[var(--color-text-secondary)] bg-[var(--color-bg-tertiary)] px-2 py-1 rounded truncate">
                   {devCommand}
                 </code>
                 <Pencil
@@ -277,14 +277,14 @@ export function Toolbar(): React.JSX.Element {
       </div>
 
       {/* Divider */}
-      <div className="w-px h-4 bg-[var(--glass-border)]" />
+      <div className="w-px h-4 bg-[var(--color-border)]" />
 
       {/* Add widget */}
       <div className="relative" ref={widgetMenuRef}>
         <button
           onClick={() => project && setShowWidgetMenu(!showWidgetMenu)}
           disabled={!project}
-          className="flex items-center gap-1.5 px-2.5 h-7 rounded-lg text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-white/5 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed"
+          className="flex items-center gap-1.5 px-2.5 h-7 rounded-md text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)] transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
           title="Add widget"
         >
           <Plus size={15} />
@@ -292,7 +292,7 @@ export function Toolbar(): React.JSX.Element {
         </button>
 
         {showWidgetMenu && (
-          <div className="absolute top-full left-0 mt-1 w-48 py-1 rounded-xl glass-solid border border-[var(--glass-border)] shadow-xl z-50">
+          <div className="absolute top-full left-0 mt-1 w-48 py-1 rounded-md bg-[var(--color-surface-overlay)] border border-[var(--color-border-strong)] shadow-lg z-50">
             {availableWidgets.length > 0 ? (
               availableWidgets.map((w) => {
                 const Icon = w.icon
@@ -303,7 +303,7 @@ export function Toolbar(): React.JSX.Element {
                       addPanel(w.id)
                       setShowWidgetMenu(false)
                     }}
-                    className="flex items-center gap-2.5 w-full px-3 py-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-white/5 transition-all duration-150"
+                    className="flex items-center gap-2.5 w-full px-3 py-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)] transition-colors duration-150"
                   >
                     <span style={{ color: w.color }}><Icon size={15} /></span>
                     <span>{w.label}</span>
@@ -318,7 +318,7 @@ export function Toolbar(): React.JSX.Element {
 
             {/* Terminal presets */}
             {terminalPresets.length > 0 && project && (
-              <div className="border-t border-[var(--glass-border)] mt-1 pt-1">
+              <div className="border-t border-[var(--color-border)] mt-1 pt-1">
                 {terminalPresets.map((preset) => {
                   const PresetIcon = preset.icon
                   return (
@@ -331,7 +331,7 @@ export function Toolbar(): React.JSX.Element {
                         })
                         setShowWidgetMenu(false)
                       }}
-                      className="flex items-center gap-2.5 w-full px-3 py-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-white/5 transition-all duration-150"
+                      className="flex items-center gap-2.5 w-full px-3 py-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)] transition-colors duration-150"
                     >
                       <span style={{ color: preset.color }}><PresetIcon size={15} /></span>
                       <span>{preset.label}</span>

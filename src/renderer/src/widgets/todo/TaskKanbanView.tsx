@@ -56,28 +56,28 @@ export function TaskKanbanView(): React.JSX.Element {
         return (
           <div
             key={status}
-            className={`flex-1 min-w-[180px] flex flex-col rounded-xl border transition-all duration-200 ${
+            className={`flex-1 min-w-[180px] flex flex-col rounded-md border transition-colors duration-150 ${
               isOver
-                ? 'border-white/15 bg-white/3'
-                : 'border-[var(--glass-border)] bg-white/2'
+                ? 'border-[var(--color-border-strong)] bg-[var(--color-surface)]'
+                : 'border-[var(--color-border)] bg-[var(--color-bg-secondary)]'
             }`}
             onDragOver={(e) => handleDragOver(e, status)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, status)}
           >
             {/* Column header */}
-            <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--glass-border)]">
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-[var(--color-border)]">
               <span
                 className="w-2 h-2 rounded-full"
                 style={{ backgroundColor: config.color }}
               />
               <span
-                className="text-xs font-semibold uppercase tracking-wider"
+                className="mono text-[10px] font-semibold uppercase tracking-wider"
                 style={{ color: config.color }}
               >
                 {config.label}
               </span>
-              <span className="text-[10px] text-[var(--color-text-muted)] ml-auto">
+              <span className="mono text-[10px] text-[var(--color-text-muted)] ml-auto">
                 {tasksInColumn.length}
               </span>
             </div>

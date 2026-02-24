@@ -8,7 +8,7 @@ export function WidgetTray(): React.JSX.Element | null {
   if (!project || project.layout.minimized.length === 0) return null
 
   return (
-    <div className="flex items-center h-9 px-3 gap-1.5 border-t border-[var(--glass-border)] glass shrink-0">
+    <div className="flex items-center h-9 px-3 gap-1.5 border-t border-[var(--color-border)] bg-[var(--color-bg-secondary)] shrink-0">
       {project.layout.minimized.map((widgetId) => {
         const widgetDef = getWidget(widgetId)
         if (!widgetDef) return null
@@ -27,19 +27,19 @@ export function WidgetTray(): React.JSX.Element | null {
           <button
             key={widgetId}
             onClick={() => restorePanel(widgetId)}
-            className="flex items-center gap-1.5 px-2.5 h-6 rounded-md text-xs font-medium transition-all duration-150"
+            className="flex items-center gap-1.5 px-2.5 h-6 rounded text-xs font-medium mono transition-colors duration-150 border"
             style={{
               background: `${color}10`,
-              border: `1px solid ${color}25`,
+              borderColor: `${color}20`,
               color: color
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.background = `${color}20`
-              e.currentTarget.style.borderColor = `${color}40`
+              e.currentTarget.style.background = `${color}1a`
+              e.currentTarget.style.borderColor = `${color}35`
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.background = `${color}10`
-              e.currentTarget.style.borderColor = `${color}25`
+              e.currentTarget.style.borderColor = `${color}20`
             }}
             title={`Restore ${displayLabel}`}
           >

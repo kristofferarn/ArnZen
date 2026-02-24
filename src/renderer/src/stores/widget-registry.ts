@@ -25,14 +25,14 @@ export const widgetRegistry: WidgetDefinition[] = [
     label: 'To-Do',
     icon: CheckSquare,
     component: TodoWidget,
-    color: '#34d399'
+    color: '#7ab88a'
   },
   {
     id: 'terminal',
     label: 'Terminal',
     icon: Terminal,
     component: TerminalWidget,
-    color: '#f59e0b',
+    color: '#c9956b',
     allowMultiple: true
   }
 ]
@@ -41,7 +41,7 @@ export const terminalPresets: TerminalPreset[] = [
   {
     label: 'Claude Code',
     icon: Bot,
-    color: '#d4a0ff',
+    color: '#a896c8',
     initialCommand: 'cls; claude --chrome'
   }
 ]

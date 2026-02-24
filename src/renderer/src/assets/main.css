@@ -2,42 +2,39 @@
 
 @layer base {
   :root {
-    /* ── Base palette ── */
-    --color-bg-deep: #08090d;
-    --color-bg-primary: #0c0e14;
-    --color-bg-secondary: #10131b;
-    --color-bg-tertiary: #161a25;
-    --color-bg-hover: #1c2030;
+    /* ── Base palette — warm charcoal, lifted from near-black ── */
+    --color-bg-deep: #1e2028;
+    --color-bg-primary: #24272f;
+    --color-bg-secondary: #2a2e38;
+    --color-bg-tertiary: #323742;
+    --color-bg-hover: #3a3f4a;
 
-    /* ── Glass surfaces ── */
-    --glass-bg: rgba(16, 19, 27, 0.6);
-    --glass-bg-hover: rgba(28, 32, 48, 0.5);
-    --glass-bg-solid: rgba(22, 26, 37, 0.85);
-    --glass-border: rgba(255, 255, 255, 0.06);
-    --glass-border-hover: rgba(255, 255, 255, 0.1);
-    --glass-blur: 16px;
-    --glass-blur-heavy: 24px;
+    /* ── Surfaces — solid, no glass ── */
+    --color-surface: #282c36;
+    --color-surface-raised: #303540;
+    --color-surface-overlay: #363c48;
 
-    /* ── Text ── */
-    --color-text-primary: #e8eaf0;
-    --color-text-secondary: #9ba1b0;
-    --color-text-muted: #5c6275;
+    /* ── Text — warm cream tones ── */
+    --color-text-primary: #dad5cd;
+    --color-text-secondary: #938e85;
+    --color-text-muted: #615c54;
 
-    /* ── Borders ── */
-    --color-border: rgba(255, 255, 255, 0.06);
-    --color-border-subtle: rgba(255, 255, 255, 0.03);
+    /* ── Borders — visible, warm ── */
+    --color-border: rgba(255, 255, 255, 0.08);
+    --color-border-subtle: rgba(255, 255, 255, 0.05);
+    --color-border-strong: rgba(255, 255, 255, 0.13);
 
-    /* ── Accent (indigo → violet gradient feel) ── */
-    --color-accent: #7c5cfc;
-    --color-accent-hover: #9b82ff;
-    --color-accent-glow: rgba(124, 92, 252, 0.25);
-    --color-accent-subtle: rgba(124, 92, 252, 0.1);
+    /* ── Accent — warm copper ── */
+    --color-accent: #c9956b;
+    --color-accent-hover: #d6a67e;
+    --color-accent-subtle: rgba(201, 149, 107, 0.12);
+    --color-accent-muted: rgba(201, 149, 107, 0.25);
 
     /* ── Semantic ── */
-    --color-success: #34d399;
-    --color-success-subtle: rgba(52, 211, 153, 0.12);
-    --color-danger: #f87171;
-    --color-danger-subtle: rgba(248, 113, 113, 0.12);
+    --color-success: #7ab88a;
+    --color-success-subtle: rgba(122, 184, 138, 0.12);
+    --color-danger: #c97070;
+    --color-danger-subtle: rgba(201, 112, 112, 0.12);
   }
 
   * {
@@ -47,7 +44,7 @@
   }
 
   body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: 'Segoe UI Variable', 'Segoe UI', system-ui, -apple-system, sans-serif;
     background: var(--color-bg-deep);
     color: var(--color-text-primary);
     overflow: hidden;
@@ -64,8 +61,8 @@
 
   /* ── Scrollbar ── */
   ::-webkit-scrollbar {
-    width: 5px;
-    height: 5px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
@@ -73,12 +70,12 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.06);
+    border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.12);
   }
 
   /* ── Electron regions ── */
@@ -91,44 +88,21 @@
   }
 }
 
-/* ── Utility classes ── */
 @layer utilities {
-  .glass {
-    background: var(--glass-bg);
-    backdrop-filter: blur(var(--glass-blur));
-    -webkit-backdrop-filter: blur(var(--glass-blur));
+  .surface {
+    background: var(--color-surface);
   }
 
-  .glass-solid {
-    background: var(--glass-bg-solid);
-    backdrop-filter: blur(var(--glass-blur-heavy));
-    -webkit-backdrop-filter: blur(var(--glass-blur-heavy));
+  .surface-raised {
+    background: var(--color-surface-raised);
   }
 
-  .glass-border {
-    border: 1px solid var(--glass-border);
-  }
-
-  .glow-accent {
-    box-shadow: 0 0 20px var(--color-accent-glow), 0 0 6px var(--color-accent-glow);
-  }
-
-  .glow-accent-sm {
-    box-shadow: 0 0 10px var(--color-accent-glow);
-  }
-
-  .gradient-mesh {
-    background:
-      radial-gradient(ellipse 80% 60% at 10% 90%, rgba(124, 92, 252, 0.08) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 50% at 85% 20%, rgba(56, 189, 248, 0.06) 0%, transparent 50%),
-      radial-gradient(ellipse 50% 40% at 50% 50%, rgba(168, 85, 247, 0.04) 0%, transparent 50%),
-      var(--color-bg-deep);
+  .mono {
+    font-family: 'Cascadia Code', 'Cascadia Mono', 'JetBrains Mono', 'Consolas', monospace;
   }
 }
 
-/* ── React Mosaic dark theme overrides ──
-   Uses .mosaic parent for higher specificity (3 classes > 2 classes)
-   to guarantee wins over react-mosaic's defaults regardless of load order */
+/* ── React Mosaic dark theme overrides ── */
 .mosaic {
   background: transparent;
 }
@@ -141,7 +115,7 @@
 }
 
 .mosaic .mosaic-tile {
-  margin: 3px;
+  margin: 2px;
 }
 
 /* Split / resize handles */
@@ -155,22 +129,21 @@
 
 .mosaic .mosaic-split .mosaic-split-line {
   background: transparent;
-  transition: background 0.15s, box-shadow 0.15s;
+  transition: background 0.15s;
 }
 
 .mosaic .mosaic-split:hover .mosaic-split-line {
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 0 4px rgba(124, 92, 252, 0.3);
+  background: var(--color-accent-muted);
 }
 
 /* Window chrome */
 .mosaic .mosaic-window,
 .mosaic .mosaic-preview {
-  border-radius: 12px;
+  border-radius: 6px;
   overflow: hidden;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
-  border: none !important;
-  background: var(--color-bg-secondary) !important;
+  box-shadow: none !important;
+  border: 1px solid var(--color-border) !important;
+  background: var(--color-bg-primary) !important;
 }
 
 /* Toolbar */
@@ -201,30 +174,30 @@
 
 /* Body overlay during drag */
 .mosaic .mosaic-window .mosaic-window-body-overlay {
-  background: rgba(12, 14, 20, 0.5) !important;
+  background: rgba(30, 32, 40, 0.5) !important;
 }
 
 /* Additional actions bar */
 .mosaic .mosaic-window .mosaic-window-additional-actions-bar,
 .mosaic .mosaic-preview .mosaic-window-additional-actions-bar {
-  background: var(--color-bg-secondary) !important;
+  background: var(--color-bg-primary) !important;
 }
 
 /* Drop targets */
 .mosaic .mosaic-drop-target .drop-target-container .drop-target {
-  background: rgba(124, 92, 252, 0.08);
-  border: 2px solid var(--color-accent);
-  border-radius: 10px;
+  background: var(--color-accent-subtle);
+  border: 1px solid var(--color-accent);
+  border-radius: 4px;
   transition: opacity 150ms;
 }
 
 .mosaic .mosaic-drop-target .drop-target-container .drop-target.drop-target-hover {
-  background: rgba(124, 92, 252, 0.15);
+  background: var(--color-accent-muted);
 }
 
 /* Drag preview */
 .mosaic .mosaic-window .mosaic-preview {
   border: 1px solid var(--color-accent);
-  border-radius: 10px;
+  border-radius: 4px;
   opacity: 0.8;
 }

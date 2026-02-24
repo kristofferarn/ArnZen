@@ -25,7 +25,7 @@ export function TaskStatusMenu({ current, onChange }: TaskStatusMenuProps): Reac
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(!open)}
-        className="flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-medium hover:bg-white/5 transition-all duration-150"
+        className="flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-medium mono hover:bg-[var(--color-bg-hover)] transition-colors duration-150"
         style={{ color: config.color }}
       >
         <span
@@ -35,7 +35,7 @@ export function TaskStatusMenu({ current, onChange }: TaskStatusMenuProps): Reac
         {config.label}
       </button>
       {open && (
-        <div className="absolute top-full left-0 mt-1 w-32 py-1 rounded-lg glass-solid border border-[var(--glass-border)] shadow-xl z-50">
+        <div className="absolute top-full left-0 mt-1 w-32 py-1 rounded-md bg-[var(--color-surface-overlay)] border border-[var(--color-border-strong)] shadow-lg z-50">
           {TASK_STATUSES.map((status) => {
             const s = TASK_STATUS_CONFIG[status]
             return (
@@ -45,7 +45,7 @@ export function TaskStatusMenu({ current, onChange }: TaskStatusMenuProps): Reac
                   onChange(status)
                   setOpen(false)
                 }}
-                className={`flex items-center gap-2 w-full px-2.5 py-1.5 text-xs hover:bg-white/5 transition-colors duration-150 ${
+                className={`flex items-center gap-2 w-full px-2.5 py-1.5 text-xs hover:bg-[var(--color-bg-hover)] transition-colors duration-150 ${
                   status === current
                     ? 'text-[var(--color-text-primary)]'
                     : 'text-[var(--color-text-secondary)]'
