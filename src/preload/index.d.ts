@@ -5,7 +5,7 @@ interface ArnZenAPI {
   loadProjects: () => Promise<{ projects: Project[]; lastActiveProjectId: string | null }>
   saveProject: (project: Project) => Promise<void>
   saveGlobalConfig: (config: GlobalConfig) => Promise<void>
-  removeProject: (rootPath: string) => Promise<void>
+  removeProject: (projectId: string) => Promise<void>
   selectFolder: () => Promise<string | null>
   windowMinimize: () => void
   windowMaximize: () => void

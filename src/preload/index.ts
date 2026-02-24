@@ -8,8 +8,8 @@ const api = {
   saveProject: (project: Project): Promise<void> => ipcRenderer.invoke('save-project', project),
   saveGlobalConfig: (config: GlobalConfig): Promise<void> =>
     ipcRenderer.invoke('save-global-config', config),
-  removeProject: (rootPath: string): Promise<void> =>
-    ipcRenderer.invoke('remove-project', rootPath),
+  removeProject: (projectId: string): Promise<void> =>
+    ipcRenderer.invoke('remove-project', projectId),
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke('select-folder'),
   windowMinimize: (): void => ipcRenderer.send('window-minimize'),
   windowMaximize: (): void => ipcRenderer.send('window-maximize'),

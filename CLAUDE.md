@@ -12,8 +12,10 @@ Multi-project support with per-project widget state. Dark theme only. Personal a
 - All persistence goes through IPC bridge in main process — easy to swap backends
 
 ## Persistence (current)
-- Per-project: `<project-root>/.arnzen/workspace.json`
-- Global: Electron userData `arnzen-config.json`
+- All data centralized under Electron userData (`%APPDATA%/arnzen/`)
+- Global: `arnzen-config.json` — project list (`{ id, rootPath }[]`) + last active
+- Per-project: `projects/<uuid>/workspace.json` — widget state, layout, settings
+- Migration from old `.arnzen/` in-project format runs automatically on first load
 
 ## Future Plans
 - **Persistence migration**: May switch from local files to either:

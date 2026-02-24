@@ -29,7 +29,7 @@ function App(): React.JSX.Element {
         window.api.saveProject(project)
       }
       window.api.saveGlobalConfig({
-        projectPaths: projects.map((p) => p.rootPath),
+        projects: projects.map((p) => ({ id: p.id, rootPath: p.rootPath })),
         lastActiveProjectId: activeProjectId
       })
     }, 500)

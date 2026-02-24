@@ -37,11 +37,7 @@ function getGlobalConfigPath(): string {
 }
 
 function readGlobalConfig(): GlobalConfig {
-  const configPath = getGlobalConfigPath()
-  if (existsSync(configPath)) {
-    return JSON.parse(readFileSync(configPath, 'utf-8'))
-  }
-  return { projectPaths: [], lastActiveProjectId: null }
+  return migrateGlobalConfig()
 }
 
 function writeGlobalConfig(config: GlobalConfig): void {
@@ -142,7 +138,19 @@ function migrateMosaicNode(
   return null
 }
 
-function readWorkspaceConfig(rootPath: string): WorkspaceConfig | null {
+function getProjectConfigDir(projectId: string): string {
+  return join(app.getPath('userData'), 'projects', projectId)
+}
+
+function readWorkspaceConfig(projectId: string): WorkspaceConfig | null {
+  const configPath = join(getProjectConfigDir(projectId), 'workspace.json')
+  if (existsSync(configPath)) {
+    return JSON.parse(readFileSync(configPath, 'utf-8'))
+  }
+  return null
+}
+
+function readLegacyWorkspaceConfig(rootPath: string): WorkspaceConfig | null {
   const configPath = join(rootPath, '.arnzen', 'workspace.json')
   if (existsSync(configPath)) {
     return JSON.parse(readFileSync(configPath, 'utf-8'))
@@ -151,13 +159,57 @@ function readWorkspaceConfig(rootPath: string): WorkspaceConfig | null {
 }
 
 function writeWorkspaceConfig(project: Project): void {
-  const dir = join(project.rootPath, '.arnzen')
+  const dir = getProjectConfigDir(project.id)
   if (!existsSync(dir)) {
     mkdirSync(dir, { recursive: true })
   }
   const { rootPath: _, ...rest } = project
   const config: WorkspaceConfig = { project: rest }
   writeFileSync(join(dir, 'workspace.json'), JSON.stringify(config, null, 2), 'utf-8')
+}
+
+/** Migrate from old format: projectPaths[] → projects[], .arnzen/ → userData/projects/ */
+function migrateGlobalConfig(): GlobalConfig {
+  const configPath = getGlobalConfigPath()
+  if (!existsSync(configPath)) {
+    return { projects: [], lastActiveProjectId: null }
+  }
+  const raw = JSON.parse(readFileSync(configPath, 'utf-8'))
+
+  // Already new format
+  if (Array.isArray(raw.projects)) {
+    return raw as GlobalConfig
+  }
+
+  // Old format: { projectPaths: string[], lastActiveProjectId }
+  const oldPaths: string[] = raw.projectPaths || []
+  const newProjects: { id: string; rootPath: string }[] = []
+
+  for (const rootPath of oldPaths) {
+    const legacyConfig = readLegacyWorkspaceConfig(rootPath)
+    if (legacyConfig) {
+      const projectId = legacyConfig.project.id
+      newProjects.push({ id: projectId, rootPath })
+
+      // Copy workspace data to centralized location
+      const destDir = getProjectConfigDir(projectId)
+      if (!existsSync(destDir)) {
+        mkdirSync(destDir, { recursive: true })
+      }
+      writeFileSync(
+        join(destDir, 'workspace.json'),
+        JSON.stringify(legacyConfig, null, 2),
+        'utf-8'
+      )
+    }
+  }
+
+  const newConfig: GlobalConfig = {
+    projects: newProjects,
+    lastActiveProjectId: raw.lastActiveProjectId ?? null
+  }
+  writeGlobalConfig(newConfig)
+  return newConfig
 }
 
 function createWindow(): void {
@@ -205,8 +257,8 @@ app.whenReady().then(() => {
     const globalConfig = readGlobalConfig()
     const projects: Project[] = []
 
-    for (const rootPath of globalConfig.projectPaths) {
-      const wsConfig = readWorkspaceConfig(rootPath)
+    for (const { id, rootPath } of globalConfig.projects) {
+      const wsConfig = readWorkspaceConfig(id)
       if (wsConfig) {
         const project = wsConfig.project
         project.widgetState = migrateWidgetState(
@@ -239,9 +291,9 @@ app.whenReady().then(() => {
   })
 
   // IPC: Remove project from global config
-  ipcMain.handle('remove-project', async (_event, rootPath: string) => {
+  ipcMain.handle('remove-project', async (_event, projectId: string) => {
     const globalConfig = readGlobalConfig()
-    globalConfig.projectPaths = globalConfig.projectPaths.filter((p) => p !== rootPath)
+    globalConfig.projects = globalConfig.projects.filter((p) => p.id !== projectId)
     writeGlobalConfig(globalConfig)
   })
 

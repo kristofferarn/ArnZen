@@ -79,7 +79,7 @@ export interface ProjectSettings {
 }
 
 export interface GlobalConfig {
-  projectPaths: string[]
+  projects: { id: string; rootPath: string }[]
   lastActiveProjectId: string | null
 }
 
