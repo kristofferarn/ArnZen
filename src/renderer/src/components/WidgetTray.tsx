@@ -13,14 +13,17 @@ export function WidgetTray(): React.JSX.Element | null {
         const widgetDef = getWidget(widgetId)
         if (!widgetDef) return null
         const Icon = widgetDef.icon
-        const color = widgetDef.color
+        let color = widgetDef.color
 
-        // Use per-instance label for terminal instances
+        // Use per-instance label and color for terminal instances
         let displayLabel = widgetDef.label
         const suffix = getInstanceSuffix(widgetId)
         if (suffix) {
           const termState = project.widgetState.terminals[suffix]
-          if (termState) displayLabel = termState.label
+          if (termState) {
+            displayLabel = termState.label
+            if (termState.color) color = termState.color
+          }
         }
 
         return (

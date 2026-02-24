@@ -29,12 +29,14 @@ export function TitleBar(): React.JSX.Element {
   return (
     <div className="flex items-center justify-between h-9 bg-[var(--color-bg-primary)] border-b border-[var(--color-border)] select-none app-drag">
       <div className="pl-3 flex items-center gap-2">
-        <img src={logo} alt="ArnZen" className="h-4.5 w-4.5 object-contain" />
-        <span className="mono text-[10px] font-semibold tracking-[0.15em] uppercase text-[var(--color-accent)]">
-          ArnZen
-        </span>
-        <span className="mono text-[9px] text-[var(--color-text-muted)]">
-          {__IS_DEV__ ? 'dev' : `v${__APP_VERSION__}`}
+        <img src={logo} alt="ArnZen" className="h-4.5 w-4.5 object-contain self-center" />
+        <span className="flex items-baseline gap-1.5">
+          <span className="mono text-xs font-semibold tracking-[0.15em] leading-none">
+            <span className="text-white">Arn</span><span className="text-[var(--color-accent)]">Zen</span>
+          </span>
+          <span className="mono text-[9px] leading-none text-[var(--color-text-muted)]">
+            {__IS_DEV__ ? 'dev' : `v${__APP_VERSION__}`}
+          </span>
         </span>
 
         {updateState.status !== 'idle' && (

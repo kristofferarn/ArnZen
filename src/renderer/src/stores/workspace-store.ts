@@ -23,6 +23,8 @@ import { widgetRegistry, getBaseType, getInstanceSuffix } from './widget-registr
 interface AddPanelOptions {
   label?: string
   initialCommand?: string
+  color?: string
+  labelLocked?: boolean
 }
 
 interface WorkspaceState {
@@ -141,7 +143,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
                 options?.label ||
                 `Terminal ${Object.keys(p.widgetState.terminals).length + 1}`,
               cwd: p.rootPath,
-              initialCommand: options?.initialCommand
+              initialCommand: options?.initialCommand,
+              color: options?.color,
+              labelLocked: options?.labelLocked
             }
             newWidgetState = {
               ...p.widgetState,

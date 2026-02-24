@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import { DirEntry, GitStatusDetailResult, GitStatusResult, GlobalConfig, Project } from '../shared/types'
+import { DirEntry, GitHubIssue, GitHubIssueComment, GitHubPR, GitHubPRDetail, PRMergeMethod, GitStatusDetailResult, GitStatusResult, GlobalConfig, Project } from '../shared/types'
 
 const api = {
   loadProjects: (): Promise<{ projects: Project[]; lastActiveProjectId: string | null }> =>
@@ -72,6 +72,30 @@ const api = {
     ipcRenderer.invoke('git:commit', cwd, message),
   gitPush: (cwd: string): Promise<void> =>
     ipcRenderer.invoke('git:push', cwd),
+
+  // GitHub (via gh CLI)
+  ghDetectRepo: (cwd: string): Promise<{ owner: string; name: string }> =>
+    ipcRenderer.invoke('gh:detect-repo', cwd),
+  ghListIssues: (cwd: string, state: string, limit: number): Promise<GitHubIssue[]> =>
+    ipcRenderer.invoke('gh:list-issues', cwd, state, limit),
+  ghCreateIssue: (cwd: string, title: string, body: string): Promise<{ number: number; url: string }> =>
+    ipcRenderer.invoke('gh:create-issue', cwd, title, body),
+  ghGetIssue: (cwd: string, issueNumber: number): Promise<GitHubIssue & { comments: GitHubIssueComment[]; milestone: string | null }> =>
+    ipcRenderer.invoke('gh:get-issue', cwd, issueNumber),
+  ghAddComment: (cwd: string, issueNumber: number, body: string): Promise<void> =>
+    ipcRenderer.invoke('gh:add-comment', cwd, issueNumber, body),
+  ghCreatePr: (cwd: string, title: string, body: string): Promise<{ url: string }> =>
+    ipcRenderer.invoke('gh:create-pr', cwd, title, body),
+  ghListPrs: (cwd: string, state: string, limit: number): Promise<GitHubPR[]> =>
+    ipcRenderer.invoke('gh:list-prs', cwd, state, limit),
+  ghGetPr: (cwd: string, prNumber: number): Promise<GitHubPRDetail> =>
+    ipcRenderer.invoke('gh:get-pr', cwd, prNumber),
+  ghMergePr: (cwd: string, prNumber: number, method: PRMergeMethod): Promise<void> =>
+    ipcRenderer.invoke('gh:merge-pr', cwd, prNumber, method),
+  ghClosePr: (cwd: string, prNumber: number): Promise<void> =>
+    ipcRenderer.invoke('gh:close-pr', cwd, prNumber),
+  ghCommentPr: (cwd: string, prNumber: number, body: string): Promise<void> =>
+    ipcRenderer.invoke('gh:comment-pr', cwd, prNumber, body),
 
   // Filesystem (editor)
   readDir: (dirPath: string): Promise<DirEntry[]> =>

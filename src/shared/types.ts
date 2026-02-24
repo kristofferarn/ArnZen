@@ -62,12 +62,86 @@ export interface GitStatusDetailResult {
   files: GitFileStatus[]
 }
 
+// ── GitHub issue types ──
+
+export interface GitHubIssue {
+  number: number
+  title: string
+  body: string
+  state: 'OPEN' | 'CLOSED'
+  author: string
+  labels: { name: string; color: string }[]
+  assignees: string[]
+  createdAt: string
+  updatedAt: string
+  commentsCount: number
+  url: string
+}
+
+export interface GitHubIssueComment {
+  id: number
+  author: string
+  body: string
+  createdAt: string
+}
+
+// ── GitHub PR types ──
+
+export type PRReviewDecision = 'APPROVED' | 'CHANGES_REQUESTED' | 'REVIEW_REQUIRED' | ''
+export type PRMergeableState = 'MERGEABLE' | 'CONFLICTING' | 'UNKNOWN'
+export type PRMergeMethod = 'merge' | 'squash' | 'rebase'
+
+export interface PRCheckStatus {
+  name: string
+  state: string
+  conclusion: string
+}
+
+export interface GitHubPR {
+  number: number
+  title: string
+  body: string
+  state: 'OPEN' | 'CLOSED' | 'MERGED'
+  author: string
+  labels: { name: string; color: string }[]
+  assignees: string[]
+  createdAt: string
+  updatedAt: string
+  commentsCount: number
+  url: string
+  headRefName: string
+  baseRefName: string
+  isDraft: boolean
+  reviewDecision: PRReviewDecision
+  mergeable: PRMergeableState
+  checks: PRCheckStatus[]
+}
+
+export interface GitHubPRComment {
+  id: number
+  author: string
+  body: string
+  createdAt: string
+}
+
+export interface GitHubPRDetail extends GitHubPR {
+  additions: number
+  deletions: number
+  changedFiles: number
+  commits: number
+  milestone: string | null
+  reviewRequests: string[]
+  comments: GitHubPRComment[]
+}
+
 // ── Terminal types ──
 
 export interface TerminalInstanceState {
   label: string
   cwd: string
   initialCommand?: string
+  color?: string
+  labelLocked?: boolean
 }
 
 // ── Mosaic layout types (structurally compatible with react-mosaic's MosaicNode) ──

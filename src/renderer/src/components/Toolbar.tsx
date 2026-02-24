@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { FolderOpen, Plus, X, Play, Square, ChevronDown, Pencil, LayoutGrid, Code2, SquareArrowOutUpRight } from 'lucide-react'
+import { FolderOpen, Plus, X, Play, Square, ChevronDown, Pencil, LayoutGrid, Code2, SquareArrowOutUpRight, MoreHorizontal } from 'lucide-react'
 import { useWorkspaceStore, useActiveProject } from '../stores/workspace-store'
 import { widgetRegistry, terminalPresets, getBaseType } from '../stores/widget-registry'
 import { useDevServerStore } from '../stores/devserver-store'
@@ -15,9 +15,11 @@ export function Toolbar(): React.JSX.Element {
   const [showDevPopover, setShowDevPopover] = useState(false)
   const [editingCommand, setEditingCommand] = useState(false)
   const [commandDraft, setCommandDraft] = useState('')
+  const [showMoreMenu, setShowMoreMenu] = useState(false)
 
   const projectMenuRef = useRef<HTMLDivElement>(null)
   const devPopoverRef = useRef<HTMLDivElement>(null)
+  const moreMenuRef = useRef<HTMLDivElement>(null)
 
   const isDevServerRunning = project ? running.has(project.id) : false
   const isPeekOpen = project ? peekOpen.has(project.id) : false
@@ -71,6 +73,9 @@ export function Toolbar(): React.JSX.Element {
       if (devPopoverRef.current && !devPopoverRef.current.contains(e.target as Node)) {
         setShowDevPopover(false)
         setEditingCommand(false)
+      }
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setShowMoreMenu(false)
       }
     }
     document.addEventListener('mousedown', handleClick)
@@ -324,8 +329,8 @@ export function Toolbar(): React.JSX.Element {
       {/* Divider */}
       <div className="w-px h-4 bg-[var(--color-border)]" />
 
-      {/* Widget buttons */}
-      {widgetRegistry.map((w) => {
+      {/* Primary widget buttons: Source Control, Issues, Claude Code */}
+      {widgetRegistry.filter((w) => w.id === 'source-control' || w.id === 'issues' || w.id === 'pulls').map((w) => {
         const Icon = w.icon
         const isPresent = !w.allowMultiple && (
           existingLeaves.some((p) => getBaseType(p) === w.id) ||
@@ -353,7 +358,8 @@ export function Toolbar(): React.JSX.Element {
             key={preset.label}
             onClick={() => addPanel('terminal', {
               label: preset.label,
-              initialCommand: preset.initialCommand
+              initialCommand: preset.initialCommand,
+              color: preset.color
             })}
             disabled={!project}
             className="flex items-center gap-1.5 px-2 h-7 rounded-md text-xs transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--color-bg-hover)]"
@@ -365,6 +371,45 @@ export function Toolbar(): React.JSX.Element {
           </button>
         )
       })}
+
+      {/* More widgets dropdown */}
+      <div className="relative" ref={moreMenuRef}>
+        <button
+          onClick={() => setShowMoreMenu(!showMoreMenu)}
+          disabled={!project}
+          className="flex items-center gap-1 px-1.5 h-7 rounded-md text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)] transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+          title="More widgets"
+        >
+          <MoreHorizontal size={16} />
+        </button>
+
+        {showMoreMenu && (
+          <div className="absolute top-full right-0 mt-1 w-48 py-1 rounded-md bg-[var(--color-surface-overlay)] border border-[var(--color-border-strong)] shadow-lg z-50">
+            {widgetRegistry.filter((w) => w.id === 'todo' || w.id === 'terminal').map((w) => {
+              const Icon = w.icon
+              const isPresent = !w.allowMultiple && (
+                existingLeaves.some((p) => getBaseType(p) === w.id) ||
+                project?.layout.minimized.some((p) => getBaseType(p) === w.id)
+              )
+              return (
+                <button
+                  key={w.id}
+                  onClick={() => {
+                    addPanel(w.id)
+                    setShowMoreMenu(false)
+                  }}
+                  disabled={isPresent}
+                  className="flex items-center gap-2.5 w-full px-3 py-1.5 text-sm hover:bg-[var(--color-bg-hover)] transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed"
+                  style={{ color: w.color }}
+                >
+                  <Icon size={14} />
+                  <span>{w.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </div>
       </div>
     </div>
   )

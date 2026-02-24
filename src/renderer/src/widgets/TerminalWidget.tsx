@@ -4,6 +4,55 @@ import { FitAddon } from '@xterm/addon-fit'
 import { WebglAddon } from '@xterm/addon-webgl'
 import { useActiveProject, useWorkspaceStore } from '../stores/workspace-store'
 import { getInstanceSuffix } from '../stores/widget-registry'
+import type { ITheme } from '@xterm/xterm'
+
+const defaultTheme: ITheme = {
+  background: '#1a1c24',
+  foreground: '#dad5cd',
+  cursor: '#c9956b',
+  cursorAccent: '#1a1c24',
+  selectionBackground: '#c9956b30',
+  black: '#24272f',
+  red: '#c97070',
+  green: '#7ab88a',
+  yellow: '#c9a856',
+  blue: '#7ba5b8',
+  magenta: '#b87a8e',
+  cyan: '#6aabb8',
+  white: '#dad5cd',
+  brightBlack: '#615c54',
+  brightRed: '#d68585',
+  brightGreen: '#8eca9c',
+  brightYellow: '#d6ba6a',
+  brightBlue: '#8eb8ca',
+  brightMagenta: '#ca8ea0',
+  brightCyan: '#7ebeca',
+  brightWhite: '#f0ebe3'
+}
+
+const claudeCodeTheme: ITheme = {
+  background: '#1c1914',
+  foreground: '#e0d5c7',
+  cursor: '#c9956b',
+  cursorAccent: '#1c1914',
+  selectionBackground: '#c9956b35',
+  black: '#2a231c',
+  red: '#c97070',
+  green: '#7ab88a',
+  yellow: '#d4a85c',
+  blue: '#7ba5b8',
+  magenta: '#b87a8e',
+  cyan: '#6aabb8',
+  white: '#e0d5c7',
+  brightBlack: '#6b5d4f',
+  brightRed: '#d68585',
+  brightGreen: '#8eca9c',
+  brightYellow: '#e0b96a',
+  brightBlue: '#8eb8ca',
+  brightMagenta: '#ca8ea0',
+  brightCyan: '#7ebeca',
+  brightWhite: '#f5ede3'
+}
 
 interface TerminalWidgetProps {
   instanceId?: string
@@ -16,6 +65,14 @@ export function TerminalWidget({ instanceId }: TerminalWidgetProps): React.JSX.E
   const terminalRef = useRef<Terminal | null>(null)
   const fitAddonRef = useRef<FitAddon | null>(null)
   const cleanupRef = useRef<(() => void) | null>(null)
+
+  // Detect instance-specific settings (color, locked label)
+  const suffix = instanceId ? getInstanceSuffix(instanceId) : undefined
+  const instanceState = suffix ? project?.widgetState.terminals[suffix] : undefined
+  const instanceColor = instanceState?.color
+  const isClaudeCode = !!instanceColor && instanceColor !== '#8a8f9a'
+  const theme = isClaudeCode ? claudeCodeTheme : defaultTheme
+  const labelLocked = !!instanceState?.labelLocked
 
   // Keep a ref to project so setupTerminal can read it without re-running
   // when unrelated project fields (e.g. terminal labels) change.
@@ -37,29 +94,7 @@ export function TerminalWidget({ instanceId }: TerminalWidgetProps): React.JSX.E
       fontFamily: "'Cascadia Code', 'Consolas', 'Courier New', monospace",
       fontSize: 13,
       lineHeight: 1.3,
-      theme: {
-        background: '#1a1c24',
-        foreground: '#dad5cd',
-        cursor: '#c9956b',
-        cursorAccent: '#1a1c24',
-        selectionBackground: '#c9956b30',
-        black: '#24272f',
-        red: '#c97070',
-        green: '#7ab88a',
-        yellow: '#c9a856',
-        blue: '#7ba5b8',
-        magenta: '#b87a8e',
-        cyan: '#6aabb8',
-        white: '#dad5cd',
-        brightBlack: '#615c54',
-        brightRed: '#d68585',
-        brightGreen: '#8eca9c',
-        brightYellow: '#d6ba6a',
-        brightBlue: '#8eb8ca',
-        brightMagenta: '#ca8ea0',
-        brightCyan: '#7ebeca',
-        brightWhite: '#f0ebe3'
-      }
+      theme
     })
 
     const fitAddon = new FitAddon()
@@ -80,11 +115,11 @@ export function TerminalWidget({ instanceId }: TerminalWidgetProps): React.JSX.E
     fitAddon.fit()
 
     // Derive PTY session ID from instance suffix
-    const suffix = instanceId ? getInstanceSuffix(instanceId) : undefined
-    const ptySessionId = suffix ? `${proj.id}:${suffix}` : proj.id
+    const instSuffix = instanceId ? getInstanceSuffix(instanceId) : undefined
+    const ptySessionId = instSuffix ? `${proj.id}:${instSuffix}` : proj.id
 
     // Look up instance state for cwd and initial command
-    const instanceState = suffix ? proj.widgetState.terminals[suffix] : undefined
+    const instanceState = instSuffix ? proj.widgetState.terminals[instSuffix] : undefined
     const cwd = instanceState?.cwd || proj.rootPath
     const initialCommand = instanceState?.initialCommand
 
@@ -149,9 +184,10 @@ export function TerminalWidget({ instanceId }: TerminalWidgetProps): React.JSX.E
       })
 
     // Listen for terminal title changes (OSC escape sequences from shell/programs)
+    // Skip updates when the label is locked (e.g. issue-assigned Claude Code)
     const titleDisposable = terminal.onTitleChange((title) => {
-      if (suffix && title) {
-        updateTerminalLabel(suffix, title)
+      if (instSuffix && title && !labelLocked) {
+        updateTerminalLabel(instSuffix, title)
       }
     })
 
@@ -175,7 +211,7 @@ export function TerminalWidget({ instanceId }: TerminalWidgetProps): React.JSX.E
       terminalRef.current = null
       fitAddonRef.current = null
     }
-  }, [instanceId, updateTerminalLabel])
+  }, [instanceId, updateTerminalLabel, theme, labelLocked])
 
   // Track project ID so the terminal initializes once when the project
   // becomes available (or changes to a different project) without
@@ -202,7 +238,7 @@ export function TerminalWidget({ instanceId }: TerminalWidgetProps): React.JSX.E
   }
 
   return (
-    <div className="h-full w-full p-2 bg-[#1a1c24]">
+    <div className="h-full w-full p-2" style={{ background: theme.background }}>
       <div ref={containerRef} className="h-full w-full" />
     </div>
   )
