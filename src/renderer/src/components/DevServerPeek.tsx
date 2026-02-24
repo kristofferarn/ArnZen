@@ -5,6 +5,7 @@ import { FitAddon } from '@xterm/addon-fit'
 import { WebglAddon } from '@xterm/addon-webgl'
 import { useActiveProject } from '../stores/workspace-store'
 import { useDevServerStore } from '../stores/devserver-store'
+import { attachClipboardHandler } from '../lib/terminal-clipboard'
 import { DEV_SERVER_SUFFIX } from '../../../shared/types'
 
 export function DevServerPeek(): React.JSX.Element | null {
@@ -94,21 +95,7 @@ function DevServerPeekPanel({ projectId, rootPath, devCommand, onClose, onRunnin
 
     terminal.open(containerRef.current)
 
-    // Ctrl+V paste / Ctrl+C copy-selection — Electron doesn't wire native
-    // clipboard events for xterm.js, so we handle them manually.
-    terminal.attachCustomKeyEventHandler((event) => {
-      if (event.type === 'keydown' && event.ctrlKey && event.key === 'v') {
-        navigator.clipboard.readText().then((text) => {
-          if (text) terminal.paste(text)
-        })
-        return false
-      }
-      if (event.type === 'keydown' && event.ctrlKey && event.key === 'c' && terminal.hasSelection()) {
-        navigator.clipboard.writeText(terminal.getSelection())
-        return false
-      }
-      return true
-    })
+    attachClipboardHandler(terminal)
 
     try {
       terminal.loadAddon(new WebglAddon())

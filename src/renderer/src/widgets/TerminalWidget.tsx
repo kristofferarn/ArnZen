@@ -4,6 +4,7 @@ import { FitAddon } from '@xterm/addon-fit'
 import { WebglAddon } from '@xterm/addon-webgl'
 import { useActiveProject, useWorkspaceStore } from '../stores/workspace-store'
 import { getInstanceSuffix } from '../stores/widget-registry'
+import { attachClipboardHandler } from '../lib/terminal-clipboard'
 import type { ITheme } from '@xterm/xterm'
 
 const defaultTheme: ITheme = {
@@ -105,21 +106,7 @@ export function TerminalWidget({ instanceId }: TerminalWidgetProps): React.JSX.E
 
     terminal.open(containerRef.current)
 
-    // Ctrl+V paste / Ctrl+C copy-selection — Electron doesn't wire native
-    // clipboard events for xterm.js, so we handle them manually.
-    terminal.attachCustomKeyEventHandler((event) => {
-      if (event.type === 'keydown' && event.ctrlKey && event.key === 'v') {
-        navigator.clipboard.readText().then((text) => {
-          if (text) terminal.paste(text)
-        })
-        return false
-      }
-      if (event.type === 'keydown' && event.ctrlKey && event.key === 'c' && terminal.hasSelection()) {
-        navigator.clipboard.writeText(terminal.getSelection())
-        return false
-      }
-      return true
-    })
+    attachClipboardHandler(terminal)
 
     // Try loading WebGL addon for GPU-accelerated rendering
     try {
