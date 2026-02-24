@@ -7,6 +7,7 @@ interface ArnZenAPI {
   saveGlobalConfig: (config: GlobalConfig) => Promise<void>
   removeProject: (projectId: string) => Promise<void>
   selectFolder: () => Promise<string | null>
+  openInVSCode: (folderPath: string) => Promise<void>
   windowMinimize: () => void
   windowMaximize: () => void
   windowClose: () => void

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { FolderOpen, Plus, X, Play, Square, ChevronDown, Pencil, LayoutGrid, Code2 } from 'lucide-react'
+import { FolderOpen, Plus, X, Play, Square, ChevronDown, Pencil, LayoutGrid, Code2, SquareArrowOutUpRight } from 'lucide-react'
 import { useWorkspaceStore, useActiveProject } from '../stores/workspace-store'
 import { widgetRegistry, terminalPresets, getBaseType } from '../stores/widget-registry'
 import { useDevServerStore } from '../stores/devserver-store'
@@ -158,6 +158,20 @@ export function Toolbar(): React.JSX.Element {
 
       {/* Git branch */}
       <GitBranchMenu />
+
+      {/* Divider */}
+      <div className="w-px h-4 bg-[var(--color-border)]" />
+
+      {/* Open in VS Code */}
+      <button
+        onClick={() => project && window.api.openInVSCode(project.rootPath)}
+        disabled={!project}
+        className="flex items-center gap-1.5 px-2 h-7 rounded-md text-xs text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)] transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+        title="Open in VS Code"
+      >
+        <SquareArrowOutUpRight size={13} />
+        <span>VS Code</span>
+      </button>
       </div>
 
       {/* Spacer */}

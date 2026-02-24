@@ -11,6 +11,7 @@ const api = {
   removeProject: (projectId: string): Promise<void> =>
     ipcRenderer.invoke('remove-project', projectId),
   selectFolder: (): Promise<string | null> => ipcRenderer.invoke('select-folder'),
+  openInVSCode: (folderPath: string): Promise<void> => ipcRenderer.invoke('open-in-vscode', folderPath),
   windowMinimize: (): void => ipcRenderer.send('window-minimize'),
   windowMaximize: (): void => ipcRenderer.send('window-maximize'),
   windowClose: (): void => ipcRenderer.send('window-close'),
