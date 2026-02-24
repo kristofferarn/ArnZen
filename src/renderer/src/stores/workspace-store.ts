@@ -9,6 +9,8 @@ import {
   ViewMode,
   TerminalInstanceState,
   MosaicLayoutNode,
+  MosaicDirection,
+  MosaicParentNode,
   DEFAULT_WIDGET_STATE,
   DEFAULT_LAYOUT,
   DEFAULT_PROJECT_SETTINGS,
@@ -42,6 +44,11 @@ interface WorkspaceState {
   removePanel: (panelId: string) => void
   minimizePanel: (panelId: string) => void
   restorePanel: (panelId: string) => void
+  restorePanelAt: (
+    panelId: string,
+    destinationPath: ('first' | 'second')[],
+    position: 'top' | 'bottom' | 'left' | 'right'
+  ) => void
   updateMosaicLayout: (node: MosaicLayoutNode<string> | null) => void
   updateTerminalLabel: (instanceSuffix: string, label: string) => void
 
@@ -239,6 +246,61 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
           ...p,
           layout: {
             mosaic: addMosaicLeaf(p.layout.mosaic, panelId),
+            minimized: p.layout.minimized.filter((id) => id !== panelId)
+          }
+        }
+      })
+    }))
+  },
+
+  restorePanelAt: (panelId, destinationPath, position) => {
+    const { activeProjectId } = get()
+    if (!activeProjectId) return
+    set((s) => ({
+      projects: s.projects.map((p) => {
+        if (p.id !== activeProjectId) return p
+        if (!p.layout.minimized.includes(panelId)) return p
+
+        const mosaic = p.layout.mosaic
+        if (mosaic === null) {
+          return {
+            ...p,
+            layout: { mosaic: panelId, minimized: p.layout.minimized.filter((id) => id !== panelId) }
+          }
+        }
+
+        // Traverse to the destination node
+        let destNode: MosaicLayoutNode<string> = mosaic
+        for (const branch of destinationPath) {
+          if (typeof destNode === 'string') break
+          destNode = destNode[branch]
+        }
+
+        // Build the new split node
+        const direction: MosaicDirection =
+          position === 'left' || position === 'right' ? 'row' : 'column'
+        const isFirst = position === 'left' || position === 'top'
+        const splitNode: MosaicParentNode<string> = {
+          direction,
+          first: isFirst ? panelId : destNode,
+          second: isFirst ? destNode : panelId
+        }
+
+        // Replace node at destinationPath
+        const setAtPath = (
+          root: MosaicLayoutNode<string>,
+          path: ('first' | 'second')[]
+        ): MosaicLayoutNode<string> => {
+          if (path.length === 0) return splitNode
+          if (typeof root === 'string') return splitNode
+          const [branch, ...rest] = path
+          return { ...root, [branch]: setAtPath(root[branch], rest) }
+        }
+
+        return {
+          ...p,
+          layout: {
+            mosaic: setAtPath(mosaic, destinationPath),
             minimized: p.layout.minimized.filter((id) => id !== panelId)
           }
         }
