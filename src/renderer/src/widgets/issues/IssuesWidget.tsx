@@ -6,7 +6,7 @@ import { useIssues, useIssuesStore, IssueStateFilter } from '../../stores/issues
 import { terminalPresets } from '../../stores/widget-registry'
 import { IssueRow } from './IssueRow'
 import { IssueCreateForm } from './IssueCreateForm'
-import { IssueDetailView } from './IssueDetailView'
+import { IssueDetailView, branchMatchesIssue } from './IssueDetailView'
 
 const STATE_OPTIONS: { value: IssueStateFilter; label: string }[] = [
   { value: 'open', label: 'Open' },
@@ -212,6 +212,7 @@ export function IssuesWidget(): React.JSX.Element {
             <IssueRow
               key={issue.number}
               issue={issue}
+              active={branchMatchesIssue(gitInfo.branch, issue.number)}
               onClick={() => handleSelectIssue(issue.number)}
             />
           ))

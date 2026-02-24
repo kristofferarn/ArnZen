@@ -16,14 +16,17 @@ function timeAgo(dateStr: string): string {
 
 interface IssueRowProps {
   issue: GitHubIssue
+  active?: boolean
   onClick: () => void
 }
 
-export function IssueRow({ issue, onClick }: IssueRowProps): React.JSX.Element {
+export function IssueRow({ issue, active, onClick }: IssueRowProps): React.JSX.Element {
   return (
     <button
       onClick={onClick}
-      className="w-full text-left px-3 py-2.5 hover:bg-[var(--color-bg-hover)] transition-colors duration-100 border-b border-[var(--color-border)]/50 group"
+      className={`w-full text-left px-3 py-2.5 hover:bg-[var(--color-bg-hover)] transition-colors duration-100 border-b border-[var(--color-border)]/50 group ${
+        active ? 'bg-[var(--color-accent)]/8 border-l-2 border-l-[var(--color-accent)]' : ''
+      }`}
     >
       <div className="flex items-start gap-2">
         <span className="mono text-[11px] text-[var(--color-text-muted)] pt-0.5 shrink-0">
