@@ -3,14 +3,16 @@ import { createPortal } from 'react-dom'
 import { X, RefreshCw, Loader2, AlertCircle, ExternalLink, Bot, GitPullRequest } from 'lucide-react'
 import { GitHubIssue, GitHubIssueComment } from '../../../../shared/types'
 import { IssueComment } from './IssueComment'
-import { issueBranchName, claudeIssueCommand } from './assign-to-claude'
+import { issueBranchName, issuePrTitle, claudeIssueCommand } from './assign-to-claude'
 
 function branchMatchesIssue(branch: string, issueNumber: number): boolean {
-  // Match patterns like issue-42-..., #42, or just the number preceded by a separator
+  // Match patterns like feat/42-..., fix/42-..., issue-42-..., #42, or number preceded by separator
   const patterns = [
+    new RegExp(`^\\w+/${issueNumber}-`),
     new RegExp(`issue-${issueNumber}\\b`),
     new RegExp(`#${issueNumber}\\b`),
-    new RegExp(`[-/]${issueNumber}[-/]`)
+    new RegExp(`[-/]${issueNumber}[-/]`),
+    new RegExp(`^${issueNumber}-`)
   ]
   return patterns.some((p) => p.test(branch))
 }
@@ -60,7 +62,7 @@ export function IssueDetailView({
     setAssigning(true)
     setAssignError(null)
 
-    const branchName = issueBranchName(issue.number, issue.title)
+    const branchName = issueBranchName(issue.number, issue.title, issue.labels)
 
     try {
       // Check if branch exists first, create or checkout accordingly
@@ -86,7 +88,7 @@ export function IssueDetailView({
     setAssignError(null)
 
     try {
-      const title = issue.title
+      const title = issuePrTitle(issue.number, issue.title, issue.labels)
       const body = `Closes #${issue.number}`
       const result = await window.api.ghCreatePr(rootPath, title, body)
       setPrUrl(result.url)

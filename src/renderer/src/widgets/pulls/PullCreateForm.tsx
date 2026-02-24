@@ -1,15 +1,18 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { X, Loader2 } from 'lucide-react'
+import { parseBranchForPR } from '../issues/assign-to-claude'
 
 interface PullCreateFormProps {
   creating: boolean
+  currentBranch?: string
   onSubmit: (title: string, body: string) => void
   onCancel: () => void
 }
 
-export function PullCreateForm({ creating, onSubmit, onCancel }: PullCreateFormProps): React.JSX.Element {
-  const [title, setTitle] = useState('')
-  const [body, setBody] = useState('')
+export function PullCreateForm({ creating, currentBranch, onSubmit, onCancel }: PullCreateFormProps): React.JSX.Element {
+  const defaults = useMemo(() => parseBranchForPR(currentBranch ?? ''), [currentBranch])
+  const [title, setTitle] = useState(defaults.title)
+  const [body, setBody] = useState(defaults.body)
 
   const handleSubmit = (): void => {
     const trimmed = title.trim()

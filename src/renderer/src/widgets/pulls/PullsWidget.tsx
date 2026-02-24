@@ -2,6 +2,7 @@ import { useEffect, useCallback, useState } from 'react'
 import { AlertCircle, Plus, RefreshCw, Search } from 'lucide-react'
 import { useActiveProject, useWorkspaceStore } from '../../stores/workspace-store'
 import { usePulls, usePullsStore, PRStateFilter } from '../../stores/pulls-store'
+import { useGitInfo } from '../../stores/git-store'
 import { PRMergeMethod } from '../../../../shared/types'
 import { PullRow } from './PullRow'
 import { PullCreateForm } from './PullCreateForm'
@@ -17,6 +18,7 @@ const STATE_OPTIONS: { value: PRStateFilter; label: string }[] = [
 export function PullsWidget(): React.JSX.Element {
   const project = useActiveProject()
   const pulls = usePulls(project?.id)
+  const gitInfo = useGitInfo(project?.id)
   const [showCreate, setShowCreate] = useState(false)
 
   const projectId = project?.id
@@ -192,6 +194,7 @@ export function PullsWidget(): React.JSX.Element {
       {showCreate && (
         <PullCreateForm
           creating={pulls.creating}
+          currentBranch={gitInfo.branch}
           onSubmit={handleCreate}
           onCancel={() => setShowCreate(false)}
         />
