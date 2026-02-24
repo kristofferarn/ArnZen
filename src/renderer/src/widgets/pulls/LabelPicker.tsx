@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { ChevronDown, Loader2 } from 'lucide-react'
 import { GitHubLabel } from '../../../../shared/types'
 
@@ -19,13 +20,47 @@ export function LabelPicker({
 }: LabelPickerProps): React.JSX.Element {
   const [open, setOpen] = useState(false)
   const [search, setSearch] = useState('')
-  const ref = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
+
+  const updatePosition = useCallback((): void => {
+    if (!buttonRef.current) return
+    const rect = buttonRef.current.getBoundingClientRect()
+    const dropdownW = 224 // w-56 (14rem)
+    const dropdownH = 220 // approximate max height (p-1.5 + max-h-48 ≈ 220)
+    const pad = 8
+
+    let top = rect.bottom + 4
+    let left = rect.right - dropdownW
+
+    // Flip above the button if it would overflow the bottom
+    if (top + dropdownH > window.innerHeight - pad) {
+      top = rect.top - 4 - dropdownH
+    }
+    // Shift horizontally to stay within viewport
+    if (left < pad) left = pad
+    if (left + dropdownW > window.innerWidth - pad) left = window.innerWidth - pad - dropdownW
+
+    setPos({ top, left })
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    updatePosition()
+  }, [open, updatePosition])
 
   useEffect(() => {
     if (!open) return
     const handleClick = (e: MouseEvent): void => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+      const target = e.target as Node
+      if (
+        buttonRef.current?.contains(target) ||
+        dropdownRef.current?.contains(target)
+      )
+        return
+      setOpen(false)
     }
     document.addEventListener('mousedown', handleClick)
     return () => document.removeEventListener('mousedown', handleClick)
@@ -33,7 +68,7 @@ export function LabelPicker({
 
   useEffect(() => {
     if (open && searchRef.current) searchRef.current.focus()
-  }, [open])
+  }, [open, pos])
 
   const handleOpen = (): void => {
     setOpen(!open)
@@ -45,8 +80,9 @@ export function LabelPicker({
     : repoLabels
 
   return (
-    <div ref={ref} className="relative">
+    <>
       <button
+        ref={buttonRef}
         onClick={handleOpen}
         className="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] transition-colors duration-150"
       >
@@ -54,54 +90,61 @@ export function LabelPicker({
         Labels
       </button>
 
-      {open && (
-        <div className="absolute top-full right-0 mt-1 w-56 rounded-md bg-[var(--color-surface-overlay)] border border-[var(--color-border-strong)] shadow-lg z-50">
-          <div className="p-1.5">
-            <input
-              ref={searchRef}
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Filter labels..."
-              className="w-full bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] text-[11px] px-2 py-1 rounded border border-[var(--color-border)] outline-none focus:border-[var(--color-accent)]/50 transition-colors duration-150 placeholder:text-[var(--color-text-muted)]"
-            />
-          </div>
-          <div className="max-h-48 overflow-y-auto py-0.5">
-            {loading ? (
-              <div className="flex items-center justify-center py-3">
-                <Loader2 size={14} className="animate-spin text-[var(--color-text-muted)]" />
-              </div>
-            ) : filtered.length === 0 ? (
-              <div className="px-3 py-2 text-[11px] text-[var(--color-text-muted)]">
-                {search ? 'No matching labels' : 'No labels in repo'}
-              </div>
-            ) : (
-              filtered.map((label) => {
-                const isSelected = selected.includes(label.name)
-                return (
-                  <button
-                    key={label.name}
-                    onClick={() => onToggle(label.name)}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-[var(--color-bg-hover)] transition-colors"
-                  >
-                    <span
-                      className="w-3 h-3 rounded-full shrink-0 border"
-                      style={{
-                        backgroundColor: isSelected ? `#${label.color}` : 'transparent',
-                        borderColor: `#${label.color}`
-                      }}
-                    />
-                    <span className="text-[11px] text-[var(--color-text-secondary)] truncate">
-                      {label.name}
-                    </span>
-                  </button>
-                )
-              })
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+      {open &&
+        pos &&
+        createPortal(
+          <div
+            ref={dropdownRef}
+            className="w-56 rounded-md bg-[var(--color-surface-overlay)] border border-[var(--color-border-strong)] shadow-lg z-50"
+            style={{ position: 'fixed', top: pos.top, left: pos.left }}
+          >
+            <div className="p-1.5">
+              <input
+                ref={searchRef}
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Filter labels..."
+                className="w-full bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] text-[11px] px-2 py-1 rounded border border-[var(--color-border)] outline-none focus:border-[var(--color-accent)]/50 transition-colors duration-150 placeholder:text-[var(--color-text-muted)]"
+              />
+            </div>
+            <div className="max-h-48 overflow-y-auto py-0.5">
+              {loading ? (
+                <div className="flex items-center justify-center py-3">
+                  <Loader2 size={14} className="animate-spin text-[var(--color-text-muted)]" />
+                </div>
+              ) : filtered.length === 0 ? (
+                <div className="px-3 py-2 text-[11px] text-[var(--color-text-muted)]">
+                  {search ? 'No matching labels' : 'No labels in repo'}
+                </div>
+              ) : (
+                filtered.map((label) => {
+                  const isSelected = selected.includes(label.name)
+                  return (
+                    <button
+                      key={label.name}
+                      onClick={() => onToggle(label.name)}
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-[var(--color-bg-hover)] transition-colors"
+                    >
+                      <span
+                        className="w-3 h-3 rounded-full shrink-0 border"
+                        style={{
+                          backgroundColor: isSelected ? `#${label.color}` : 'transparent',
+                          borderColor: `#${label.color}`
+                        }}
+                      />
+                      <span className="text-[11px] text-[var(--color-text-secondary)] truncate">
+                        {label.name}
+                      </span>
+                    </button>
+                  )
+                })
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
+    </>
   )
 }
 
