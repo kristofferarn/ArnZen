@@ -1,23 +1,39 @@
-import { useState, useMemo } from 'react'
-import { X, Loader2 } from 'lucide-react'
+import { useState, useMemo, useEffect } from 'react'
+import { X, Loader2, ChevronDown } from 'lucide-react'
 import { parseBranchForPR } from '../issues/assign-to-claude'
 
 interface PullCreateFormProps {
   creating: boolean
   currentBranch?: string
-  onSubmit: (title: string, body: string) => void
+  defaultBranch?: string
+  branches: string[]
+  onSubmit: (title: string, body: string, head: string, base: string) => void
   onCancel: () => void
 }
 
-export function PullCreateForm({ creating, currentBranch, onSubmit, onCancel }: PullCreateFormProps): React.JSX.Element {
+export function PullCreateForm({
+  creating,
+  currentBranch,
+  defaultBranch,
+  branches,
+  onSubmit,
+  onCancel
+}: PullCreateFormProps): React.JSX.Element {
   const defaults = useMemo(() => parseBranchForPR(currentBranch ?? ''), [currentBranch])
   const [title, setTitle] = useState(defaults.title)
   const [body, setBody] = useState(defaults.body)
+  const [head, setHead] = useState(currentBranch ?? '')
+  const [base, setBase] = useState(defaultBranch ?? '')
+  const [userChangedBase, setUserChangedBase] = useState(false)
+
+  useEffect(() => {
+    if (defaultBranch && !userChangedBase) setBase(defaultBranch)
+  }, [defaultBranch, userChangedBase])
 
   const handleSubmit = (): void => {
     const trimmed = title.trim()
     if (!trimmed || creating) return
-    onSubmit(trimmed, body.trim())
+    onSubmit(trimmed, body.trim(), head, base)
   }
 
   return (
@@ -33,6 +49,13 @@ export function PullCreateForm({ creating, currentBranch, onSubmit, onCancel }: 
           <X size={14} />
         </button>
       </div>
+
+      <div className="flex items-center gap-2 text-xs">
+        <BranchSelect label="from" value={head} branches={branches} onChange={setHead} />
+        <span className="text-[var(--color-text-muted)]">&rarr;</span>
+        <BranchSelect label="into" value={base} branches={branches} onChange={(v) => { setBase(v); setUserChangedBase(true) }} />
+      </div>
+
       <input
         type="text"
         value={title}
@@ -58,6 +81,44 @@ export function PullCreateForm({ creating, currentBranch, onSubmit, onCancel }: 
           {creating && <Loader2 size={12} className="animate-spin" />}
           Create PR
         </button>
+      </div>
+    </div>
+  )
+}
+
+function BranchSelect({
+  label,
+  value,
+  branches,
+  onChange
+}: {
+  label: string
+  value: string
+  branches: string[]
+  onChange: (v: string) => void
+}): React.JSX.Element {
+  return (
+    <div className="flex items-center gap-1.5 min-w-0 flex-1">
+      <span className="text-[var(--color-text-muted)] shrink-0">{label}</span>
+      <div className="relative flex-1 min-w-0">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full appearance-none bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] text-xs pl-2 pr-6 py-1.5 rounded-md border border-[var(--color-border)] outline-none focus:border-[var(--color-accent)]/50 transition-colors duration-150 truncate cursor-pointer"
+        >
+          {branches.map((b) => (
+            <option key={b} value={b}>
+              {b}
+            </option>
+          ))}
+          {value && !branches.includes(value) && (
+            <option value={value}>{value}</option>
+          )}
+        </select>
+        <ChevronDown
+          size={12}
+          className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] pointer-events-none"
+        />
       </div>
     </div>
   )

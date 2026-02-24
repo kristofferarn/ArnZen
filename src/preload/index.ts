@@ -84,14 +84,16 @@ const api = {
     ipcRenderer.invoke('gh:get-issue', cwd, issueNumber),
   ghAddComment: (cwd: string, issueNumber: number, body: string): Promise<void> =>
     ipcRenderer.invoke('gh:add-comment', cwd, issueNumber, body),
-  ghCreatePr: (cwd: string, title: string, body: string): Promise<{ url: string }> =>
-    ipcRenderer.invoke('gh:create-pr', cwd, title, body),
+  ghDefaultBranch: (cwd: string): Promise<string> =>
+    ipcRenderer.invoke('gh:default-branch', cwd),
+  ghCreatePr: (cwd: string, title: string, body: string, head?: string, base?: string): Promise<{ url: string }> =>
+    ipcRenderer.invoke('gh:create-pr', cwd, title, body, head, base),
   ghListPrs: (cwd: string, state: string, limit: number): Promise<GitHubPR[]> =>
     ipcRenderer.invoke('gh:list-prs', cwd, state, limit),
   ghGetPr: (cwd: string, prNumber: number): Promise<GitHubPRDetail> =>
     ipcRenderer.invoke('gh:get-pr', cwd, prNumber),
-  ghMergePr: (cwd: string, prNumber: number, method: PRMergeMethod): Promise<void> =>
-    ipcRenderer.invoke('gh:merge-pr', cwd, prNumber, method),
+  ghMergePr: (cwd: string, prNumber: number, method: PRMergeMethod, deleteBranch?: boolean): Promise<void> =>
+    ipcRenderer.invoke('gh:merge-pr', cwd, prNumber, method, deleteBranch),
   ghClosePr: (cwd: string, prNumber: number): Promise<void> =>
     ipcRenderer.invoke('gh:close-pr', cwd, prNumber),
   ghCommentPr: (cwd: string, prNumber: number, body: string): Promise<void> =>

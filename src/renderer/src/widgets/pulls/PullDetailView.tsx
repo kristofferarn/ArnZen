@@ -16,7 +16,7 @@ interface PullDetailViewProps {
   onClose: () => void
   onAddComment: (body: string) => void
   onRefresh: () => void
-  onMerge: (method: PRMergeMethod) => void
+  onMerge: (method: PRMergeMethod, deleteBranch?: boolean) => void
   onClosePR: () => void
   onReviewWithClaude: (label: string, initialCommand: string) => void
 }
@@ -66,6 +66,7 @@ export function PullDetailView({
   const [commentBody, setCommentBody] = useState('')
   const [showMergeMenu, setShowMergeMenu] = useState(false)
   const [showChecks, setShowChecks] = useState(false)
+  const [deleteBranch, setDeleteBranch] = useState(false)
 
   const handleSubmitComment = useCallback(() => {
     const trimmed = commentBody.trim()
@@ -77,9 +78,9 @@ export function PullDetailView({
   const handleMerge = useCallback(
     (method: PRMergeMethod) => {
       setShowMergeMenu(false)
-      onMerge(method)
+      onMerge(method, deleteBranch)
     },
-    [onMerge]
+    [onMerge, deleteBranch]
   )
 
   const handleReviewWithClaude = useCallback(() => {
@@ -176,7 +177,7 @@ export function PullDetailView({
                       <ChevronDown size={11} />
                     </button>
                     {showMergeMenu && (
-                      <div className="absolute top-full right-0 mt-1 w-36 py-1 rounded-md bg-[var(--color-surface-overlay)] border border-[var(--color-border-strong)] shadow-lg z-50">
+                      <div className="absolute top-full right-0 mt-1 w-44 py-1 rounded-md bg-[var(--color-surface-overlay)] border border-[var(--color-border-strong)] shadow-lg z-50">
                         <button
                           onClick={() => handleMerge('merge')}
                           className="w-full px-3 py-1.5 text-left text-[11px] text-[var(--color-text-secondary)] hover:bg-[var(--color-bg-hover)] transition-colors"
@@ -195,6 +196,19 @@ export function PullDetailView({
                         >
                           Rebase and merge
                         </button>
+                        <div className="border-t border-[var(--color-border)] my-1" />
+                        <label
+                          className="flex items-center gap-2 px-3 py-1.5 text-[11px] text-[var(--color-text-muted)] hover:bg-[var(--color-bg-hover)] transition-colors cursor-pointer"
+                          onMouseDown={(e) => e.stopPropagation()}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={deleteBranch}
+                            onChange={(e) => setDeleteBranch(e.target.checked)}
+                            className="accent-[var(--color-accent)]"
+                          />
+                          Delete branch
+                        </label>
                       </div>
                     )}
                   </div>

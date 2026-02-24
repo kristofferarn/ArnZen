@@ -5,7 +5,6 @@ import { useActiveProject, useWorkspaceStore } from '../stores/workspace-store'
 import {
   widgetRegistry,
   terminalPresets,
-  getBaseType,
   getWidget,
   getInstanceSuffix
 } from '../stores/widget-registry'
