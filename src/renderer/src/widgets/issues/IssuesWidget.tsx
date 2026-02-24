@@ -60,13 +60,26 @@ export function IssuesWidget(): React.JSX.Element {
   )
 
   const handleCreate = useCallback(
-    (title: string, body: string) => {
+    (title: string, body: string, labels: string[]) => {
       if (!projectId || !rootPath) return
-      useIssuesStore.getState().createIssue(projectId, rootPath, title, body).then(() => {
+      useIssuesStore.getState().createIssue(projectId, rootPath, title, body, labels).then(() => {
         setShowCreate(false)
       })
     },
     [projectId, rootPath]
+  )
+
+  const handleFetchLabels = useCallback(() => {
+    if (!projectId || !rootPath) return
+    useIssuesStore.getState().fetchLabels(projectId, rootPath)
+  }, [projectId, rootPath])
+
+  const handleEditLabels = useCallback(
+    (add: string[], remove: string[]) => {
+      if (!projectId || !rootPath || !issues.selectedIssue) return
+      useIssuesStore.getState().editIssueLabels(projectId, rootPath, issues.selectedIssue, add, remove)
+    },
+    [projectId, rootPath, issues.selectedIssue]
   )
 
   const handleSelectIssue = useCallback(
@@ -190,8 +203,11 @@ export function IssuesWidget(): React.JSX.Element {
       {showCreate && (
         <IssueCreateForm
           creating={issues.creating}
+          repoLabels={issues.repoLabels}
+          loadingLabels={issues.loadingLabels}
           onSubmit={handleCreate}
           onCancel={() => setShowCreate(false)}
+          onFetchLabels={handleFetchLabels}
         />
       )}
 
@@ -236,10 +252,14 @@ export function IssuesWidget(): React.JSX.Element {
           error={issues.error}
           rootPath={rootPath}
           currentBranch={gitInfo.branch}
+          repoLabels={issues.repoLabels}
+          loadingLabels={issues.loadingLabels}
           onClose={handleDeselectIssue}
           onAddComment={handleAddComment}
           onRefresh={handleRefreshDetail}
           onAssignToClaude={handleAssignToClaude}
+          onEditLabels={handleEditLabels}
+          onFetchLabels={handleFetchLabels}
         />
       )}
     </div>

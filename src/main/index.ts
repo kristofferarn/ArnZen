@@ -641,8 +641,11 @@ app.whenReady().then(() => {
 
   ipcMain.handle(
     'gh:create-issue',
-    async (_event, cwd: string, title: string, body: string) => {
+    async (_event, cwd: string, title: string, body: string, labels?: string[]) => {
       const args = ['issue', 'create', '--title', title, '--body', body || '']
+      if (labels) {
+        for (const label of labels) args.push('--label', label)
+      }
       const url = await runGh(cwd, args, 30000)
       // gh issue create prints the URL, e.g. https://github.com/owner/repo/issues/42
       const numberMatch = url.match(/\/issues\/(\d+)/)
@@ -704,6 +707,16 @@ app.whenReady().then(() => {
     'gh:edit-pr-labels',
     async (_event, cwd: string, prNumber: number, add: string[], remove: string[]): Promise<void> => {
       const args = ['pr', 'edit', String(prNumber)]
+      for (const label of add) args.push('--add-label', label)
+      for (const label of remove) args.push('--remove-label', label)
+      await runGh(cwd, args, 30000)
+    }
+  )
+
+  ipcMain.handle(
+    'gh:edit-issue-labels',
+    async (_event, cwd: string, issueNumber: number, add: string[], remove: string[]): Promise<void> => {
+      const args = ['issue', 'edit', String(issueNumber)]
       for (const label of add) args.push('--add-label', label)
       for (const label of remove) args.push('--remove-label', label)
       await runGh(cwd, args, 30000)
