@@ -16,7 +16,7 @@ export function SourceControlWidget(): React.JSX.Element {
   const rootPath = project?.rootPath
   const isRepo = gitInfo.isRepo
 
-  // Poll every 3s + refresh on focus
+  // Poll every 3s while focused, pause on blur, resume + refresh on focus
   useEffect(() => {
     if (!projectId || !rootPath || !isRepo) return
 
@@ -24,13 +24,32 @@ export function SourceControlWidget(): React.JSX.Element {
       useSourceControlStore.getState().refresh(projectId, rootPath)
     }
 
+    const startPolling = (): void => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      intervalRef.current = setInterval(doRefresh, 3000)
+    }
+
+    const stopPolling = (): void => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+    }
+
+    const handleFocus = (): void => {
+      doRefresh()
+      startPolling()
+    }
+
     doRefresh()
-    intervalRef.current = setInterval(doRefresh, 3000)
-    window.addEventListener('focus', doRefresh)
+    if (document.hasFocus()) startPolling()
+    window.addEventListener('focus', handleFocus)
+    window.addEventListener('blur', stopPolling)
 
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
-      window.removeEventListener('focus', doRefresh)
+      stopPolling()
+      window.removeEventListener('focus', handleFocus)
+      window.removeEventListener('blur', stopPolling)
     }
   }, [projectId, rootPath, isRepo])
 
