@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, createContext, useContext } from 'react'
 import { Folder, FolderOpen, FileText, FileCode2, FileJson, FileImage, ChevronRight, ChevronDown } from 'lucide-react'
 import { DirEntry } from '../../../shared/types'
-import { useEditorStore } from '../stores/editor-store'
 
 const FILE_ICON_MAP: Record<string, typeof FileText> = {
   ts: FileCode2,
@@ -22,6 +21,16 @@ function getFileIcon(name: string): typeof FileText {
   return FILE_ICON_MAP[ext] || FileText
 }
 
+interface FileTreeContextValue {
+  onFileSelect: (filePath: string) => void
+  activeFilePath: string | null
+}
+
+const FileTreeContext = createContext<FileTreeContextValue>({
+  onFileSelect: () => {},
+  activeFilePath: null
+})
+
 interface TreeNodeProps {
   name: string
   path: string
@@ -33,11 +42,11 @@ function TreeNode({ name, path, isDirectory, depth }: TreeNodeProps): React.JSX.
   const [expanded, setExpanded] = useState(false)
   const [children, setChildren] = useState<DirEntry[] | null>(null)
   const [loading, setLoading] = useState(false)
-  const { openFile, activeFilePath } = useEditorStore()
+  const { onFileSelect, activeFilePath } = useContext(FileTreeContext)
 
   const toggle = useCallback(async () => {
     if (!isDirectory) {
-      openFile(path)
+      onFileSelect(path)
       return
     }
 
@@ -53,7 +62,7 @@ function TreeNode({ name, path, isDirectory, depth }: TreeNodeProps): React.JSX.
       setLoading(false)
     }
     setExpanded(true)
-  }, [isDirectory, expanded, children, path, openFile])
+  }, [isDirectory, expanded, children, path, onFileSelect])
 
   const isActive = !isDirectory && activeFilePath === path
 
@@ -117,9 +126,11 @@ function TreeNode({ name, path, isDirectory, depth }: TreeNodeProps): React.JSX.
 
 interface FileTreeProps {
   rootPath: string
+  onFileSelect: (filePath: string) => void
+  activeFilePath: string | null
 }
 
-export function FileTree({ rootPath }: FileTreeProps): React.JSX.Element {
+export function FileTree({ rootPath, onFileSelect, activeFilePath }: FileTreeProps): React.JSX.Element {
   const [entries, setEntries] = useState<DirEntry[]>([])
 
   useEffect(() => {
@@ -127,16 +138,18 @@ export function FileTree({ rootPath }: FileTreeProps): React.JSX.Element {
   }, [rootPath])
 
   return (
-    <div className="h-full overflow-y-auto overflow-x-hidden select-none">
-      {entries.map((entry) => (
-        <TreeNode
-          key={entry.name}
-          name={entry.name}
-          path={`${rootPath}/${entry.name}`}
-          isDirectory={entry.isDirectory}
-          depth={0}
-        />
-      ))}
-    </div>
+    <FileTreeContext value={{ onFileSelect, activeFilePath }}>
+      <div className="h-full overflow-y-auto overflow-x-hidden select-none">
+        {entries.map((entry) => (
+          <TreeNode
+            key={entry.name}
+            name={entry.name}
+            path={`${rootPath}/${entry.name}`}
+            isDirectory={entry.isDirectory}
+            depth={0}
+          />
+        ))}
+      </div>
+    </FileTreeContext>
   )
 }

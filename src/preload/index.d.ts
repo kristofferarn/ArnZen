@@ -58,6 +58,9 @@ interface ArnZenAPI {
   // Filesystem (editor)
   readDir: (dirPath: string) => Promise<DirEntry[]>
   readFile: (filePath: string) => Promise<{ content: string } | { error: string }>
+  watchFile: (watchId: string, filePath: string) => void
+  unwatchFile: (watchId: string) => void
+  onFileChanged: (callback: (watchId: string, filePath: string) => void) => () => void
 
   // Auto-updater
   onUpdateAvailable: (callback: (version: string) => void) => () => void

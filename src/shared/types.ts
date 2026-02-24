@@ -150,6 +150,13 @@ export interface TerminalInstanceState {
   labelLocked?: boolean
 }
 
+// ── File viewer types ──
+
+export interface FileViewerInstanceState {
+  currentFilePath: string | null
+  wordWrap: boolean
+}
+
 // ── Mosaic layout types (structurally compatible with react-mosaic's MosaicNode) ──
 
 export type MosaicDirection = 'row' | 'column'
@@ -170,6 +177,7 @@ export interface WidgetState {
   todoViewMode: TodoViewMode
   terminalCwd: string
   terminals: Record<string, TerminalInstanceState>
+  fileViewers: Record<string, FileViewerInstanceState>
   notes: string
   viewMode: ViewMode
   editorOpenFiles: string[]
@@ -209,6 +217,7 @@ export const DEFAULT_WIDGET_STATE: WidgetState = {
   todoViewMode: 'list',
   terminalCwd: '',
   terminals: {},
+  fileViewers: {},
   notes: '',
   viewMode: 'widgets',
   editorOpenFiles: [],

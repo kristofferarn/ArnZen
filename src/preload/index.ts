@@ -110,6 +110,18 @@ const api = {
     ipcRenderer.invoke('fs:read-dir', dirPath),
   readFile: (filePath: string): Promise<{ content: string } | { error: string }> =>
     ipcRenderer.invoke('fs:read-file', filePath),
+  watchFile: (watchId: string, filePath: string): void =>
+    ipcRenderer.send('fs:watch-file', watchId, filePath),
+  unwatchFile: (watchId: string): void =>
+    ipcRenderer.send('fs:unwatch-file', watchId),
+  onFileChanged: (callback: (watchId: string, filePath: string) => void): (() => void) => {
+    const handler = (_event: Electron.IpcRendererEvent, watchId: string, filePath: string): void =>
+      callback(watchId, filePath)
+    ipcRenderer.on('fs:file-changed', handler)
+    return () => {
+      ipcRenderer.removeListener('fs:file-changed', handler)
+    }
+  },
 
   // Auto-updater
   onUpdateAvailable: (callback: (version: string) => void): (() => void) => {

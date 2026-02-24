@@ -1,10 +1,11 @@
 import { ComponentType } from 'react'
-import { Bot, CheckSquare, CircleDot, GitCommitHorizontal, GitPullRequestDraft, Terminal } from 'lucide-react'
+import { Bot, CheckSquare, CircleDot, FileSearch, GitCommitHorizontal, GitPullRequestDraft, Terminal } from 'lucide-react'
 import { TodoWidget } from '../widgets/TodoWidget'
 import { TerminalWidget } from '../widgets/TerminalWidget'
 import { SourceControlWidget } from '../widgets/source-control/SourceControlWidget'
 import { IssuesWidget } from '../widgets/issues/IssuesWidget'
 import { PullsWidget } from '../widgets/pulls/PullsWidget'
+import { FileViewerWidget } from '../widgets/FileViewerWidget'
 
 export interface WidgetDefinition {
   id: string
@@ -50,6 +51,14 @@ export const widgetRegistry: WidgetDefinition[] = [
     icon: GitPullRequestDraft,
     component: PullsWidget,
     color: '#3fb950'
+  },
+  {
+    id: 'file-viewer',
+    label: 'File Viewer',
+    icon: FileSearch,
+    component: FileViewerWidget,
+    color: '#7ba5b8',
+    allowMultiple: true
   },
   {
     id: 'terminal',
