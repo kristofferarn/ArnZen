@@ -2,8 +2,8 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
 
 jobs:
   build:
@@ -14,11 +14,41 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
+
+      - name: Determine version bump
+        id: bump
+        shell: bash
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=%B)
+          if echo "$COMMIT_MSG" | grep -qi '\[major\]'; then
+            echo "type=major" >> $GITHUB_OUTPUT
+          elif echo "$COMMIT_MSG" | grep -qi '\[minor\]'; then
+            echo "type=minor" >> $GITHUB_OUTPUT
+          else
+            echo "type=patch" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Bump version
+        id: version
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          NEW_VERSION=$(npm version ${{ steps.bump.outputs.type }} --no-git-tag-version)
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          git add package.json package-lock.json
+          git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
+          git tag "$NEW_VERSION"
+          git push
+          git push --tags
 
       - name: Install dependencies
         run: npm ci
