@@ -47,6 +47,21 @@ export interface GitStatusResult {
   dirty: boolean
 }
 
+export interface GitFileStatus {
+  path: string
+  indexStatus: string
+  workTreeStatus: string
+  origPath?: string
+}
+
+export interface GitStatusDetailResult {
+  branch: string
+  detached: boolean
+  ahead: number
+  behind: number
+  files: GitFileStatus[]
+}
+
 // ── Terminal types ──
 
 export interface TerminalInstanceState {

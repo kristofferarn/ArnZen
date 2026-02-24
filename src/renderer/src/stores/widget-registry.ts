@@ -1,7 +1,8 @@
 import { ComponentType } from 'react'
-import { Bot, CheckSquare, Terminal } from 'lucide-react'
+import { Bot, CheckSquare, GitCommitHorizontal, Terminal } from 'lucide-react'
 import { TodoWidget } from '../widgets/TodoWidget'
 import { TerminalWidget } from '../widgets/TerminalWidget'
+import { SourceControlWidget } from '../widgets/source-control/SourceControlWidget'
 
 export interface WidgetDefinition {
   id: string
@@ -28,11 +29,18 @@ export const widgetRegistry: WidgetDefinition[] = [
     color: '#7ab88a'
   },
   {
+    id: 'source-control',
+    label: 'Source Control',
+    icon: GitCommitHorizontal,
+    component: SourceControlWidget,
+    color: '#6b9fd4'
+  },
+  {
     id: 'terminal',
     label: 'Terminal',
     icon: Terminal,
     component: TerminalWidget,
-    color: '#c9956b',
+    color: '#8a8f9a',
     allowMultiple: true
   }
 ]
@@ -41,7 +49,7 @@ export const terminalPresets: TerminalPreset[] = [
   {
     label: 'Claude Code',
     icon: Bot,
-    color: '#a896c8',
+    color: '#c9956b',
     initialCommand: 'cls; claude --chrome'
   }
 ]

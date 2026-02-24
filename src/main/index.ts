@@ -8,6 +8,8 @@ import icon from '../../resources/logo_transparent.png?asset'
 import {
   DEFAULT_PROJECT_SETTINGS,
   DirEntry,
+  GitFileStatus,
+  GitStatusDetailResult,
   GitStatusResult,
   GlobalConfig,
   Project,
@@ -21,8 +23,8 @@ import * as pty from 'node-pty'
 
 const execFileAsync = promisify(execFile)
 
-async function runGit(cwd: string, args: string[]): Promise<string> {
-  const { stdout } = await execFileAsync('git', args, { cwd, encoding: 'utf-8', timeout: 10000 })
+async function runGit(cwd: string, args: string[], timeout = 10000): Promise<string> {
+  const { stdout } = await execFileAsync('git', args, { cwd, encoding: 'utf-8', timeout })
   return stdout.trim()
 }
 
@@ -471,6 +473,105 @@ app.whenReady().then(() => {
 
   ipcMain.handle('git:pull', async (_event, cwd: string): Promise<void> => {
     await runGit(cwd, ['pull'])
+  })
+
+  ipcMain.handle('git:status-detail', async (_event, cwd: string): Promise<GitStatusDetailResult> => {
+    const raw = await runGit(cwd, ['status', '--porcelain=v1', '-uall', '--branch'])
+    const lines = raw.split('\n')
+    let branch = ''
+    let detached = false
+    let ahead = 0
+    let behind = 0
+    const files: GitFileStatus[] = []
+
+    for (const line of lines) {
+      if (line.startsWith('## ')) {
+        const header = line.substring(3)
+        // Detached HEAD
+        if (header.startsWith('HEAD (no branch)') || header.startsWith('No commits yet')) {
+          detached = true
+          branch = 'HEAD'
+          continue
+        }
+        // Parse "branch...remote [ahead N, behind M]"
+        const dotIdx = header.indexOf('...')
+        if (dotIdx !== -1) {
+          branch = header.substring(0, dotIdx)
+          const bracketMatch = header.match(/\[(.+)\]/)
+          if (bracketMatch) {
+            const info = bracketMatch[1]
+            const aheadMatch = info.match(/ahead (\d+)/)
+            const behindMatch = info.match(/behind (\d+)/)
+            if (aheadMatch) ahead = parseInt(aheadMatch[1], 10)
+            if (behindMatch) behind = parseInt(behindMatch[1], 10)
+          }
+        } else {
+          // No remote tracking
+          branch = header.split(' ')[0]
+        }
+        continue
+      }
+      if (line.length < 4) continue
+      const indexStatus = line[0]
+      const workTreeStatus = line[1]
+      const rest = line.substring(3)
+      // Handle renames: "R  old -> new"
+      const arrowIdx = rest.indexOf(' -> ')
+      if (arrowIdx !== -1) {
+        files.push({
+          path: rest.substring(arrowIdx + 4),
+          indexStatus,
+          workTreeStatus,
+          origPath: rest.substring(0, arrowIdx)
+        })
+      } else {
+        files.push({ path: rest, indexStatus, workTreeStatus })
+      }
+    }
+    return { branch, detached, ahead, behind, files }
+  })
+
+  ipcMain.handle('git:stage', async (_event, cwd: string, paths: string[]): Promise<void> => {
+    await runGit(cwd, ['add', '--', ...paths])
+  })
+
+  ipcMain.handle('git:stage-all', async (_event, cwd: string): Promise<void> => {
+    await runGit(cwd, ['add', '-A'])
+  })
+
+  ipcMain.handle('git:unstage', async (_event, cwd: string, paths: string[]): Promise<void> => {
+    await runGit(cwd, ['reset', 'HEAD', '--', ...paths])
+  })
+
+  ipcMain.handle('git:unstage-all', async (_event, cwd: string): Promise<void> => {
+    await runGit(cwd, ['reset', 'HEAD'])
+  })
+
+  ipcMain.handle('git:discard', async (_event, cwd: string, paths: string[]): Promise<void> => {
+    // Separate tracked (checkout) from untracked (clean)
+    const statusRaw = await runGit(cwd, ['status', '--porcelain=v1', '-uall'])
+    const untrackedSet = new Set<string>()
+    for (const line of statusRaw.split('\n')) {
+      if (line.startsWith('??')) {
+        untrackedSet.add(line.substring(3))
+      }
+    }
+    const tracked = paths.filter((p) => !untrackedSet.has(p))
+    const untracked = paths.filter((p) => untrackedSet.has(p))
+    if (tracked.length > 0) {
+      await runGit(cwd, ['checkout', '--', ...tracked])
+    }
+    if (untracked.length > 0) {
+      await runGit(cwd, ['clean', '-f', '--', ...untracked])
+    }
+  })
+
+  ipcMain.handle('git:commit', async (_event, cwd: string, message: string): Promise<void> => {
+    await runGit(cwd, ['commit', '-m', message])
+  })
+
+  ipcMain.handle('git:push', async (_event, cwd: string): Promise<void> => {
+    await runGit(cwd, ['push'], 30000)
   })
 
   // IPC: Read directory listing (for editor file tree)

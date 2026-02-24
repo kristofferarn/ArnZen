@@ -29,26 +29,29 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   openFile: async (filePath: string) => {
     const { openFiles, fileContents } = get()
 
-    // If already open, just activate
+    // If already open, just activate — but still fetch content if missing
     if (openFiles.some((f) => f.path === filePath)) {
       set({ activeFilePath: filePath })
-      return
+      if (fileContents.has(filePath)) {
+        return
+      }
+    } else {
+      set({
+        openFiles: [...openFiles, { path: filePath, name: basename(filePath) }],
+        activeFilePath: filePath
+      })
     }
 
     // Fetch content via IPC
     const result = await window.api.readFile(filePath)
-    const newContents = new Map(fileContents)
+    const newContents = new Map(get().fileContents)
     if ('content' in result) {
       newContents.set(filePath, result.content)
     } else {
       newContents.set(filePath, `// ${result.error}`)
     }
 
-    set({
-      openFiles: [...openFiles, { path: filePath, name: basename(filePath) }],
-      activeFilePath: filePath,
-      fileContents: newContents
-    })
+    set({ fileContents: newContents })
   },
 
   closeFile: (filePath: string) => {

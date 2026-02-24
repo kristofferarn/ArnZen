@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { electronAPI } from '@electron-toolkit/preload'
-import { DirEntry, GitStatusResult, GlobalConfig, Project } from '../shared/types'
+import { DirEntry, GitStatusDetailResult, GitStatusResult, GlobalConfig, Project } from '../shared/types'
 
 const api = {
   loadProjects: (): Promise<{ projects: Project[]; lastActiveProjectId: string | null }> =>
@@ -55,6 +55,22 @@ const api = {
     ipcRenderer.invoke('git:fetch', cwd),
   gitPull: (cwd: string): Promise<void> =>
     ipcRenderer.invoke('git:pull', cwd),
+  gitStatusDetail: (cwd: string): Promise<GitStatusDetailResult> =>
+    ipcRenderer.invoke('git:status-detail', cwd),
+  gitStage: (cwd: string, paths: string[]): Promise<void> =>
+    ipcRenderer.invoke('git:stage', cwd, paths),
+  gitStageAll: (cwd: string): Promise<void> =>
+    ipcRenderer.invoke('git:stage-all', cwd),
+  gitUnstage: (cwd: string, paths: string[]): Promise<void> =>
+    ipcRenderer.invoke('git:unstage', cwd, paths),
+  gitUnstageAll: (cwd: string): Promise<void> =>
+    ipcRenderer.invoke('git:unstage-all', cwd),
+  gitDiscard: (cwd: string, paths: string[]): Promise<void> =>
+    ipcRenderer.invoke('git:discard', cwd, paths),
+  gitCommit: (cwd: string, message: string): Promise<void> =>
+    ipcRenderer.invoke('git:commit', cwd, message),
+  gitPush: (cwd: string): Promise<void> =>
+    ipcRenderer.invoke('git:push', cwd),
 
   // Filesystem (editor)
   readDir: (dirPath: string): Promise<DirEntry[]> =>

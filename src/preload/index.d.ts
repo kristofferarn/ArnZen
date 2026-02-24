@@ -1,5 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
-import { DirEntry, GitStatusResult, GlobalConfig, Project } from '../shared/types'
+import { DirEntry, GitStatusDetailResult, GitStatusResult, GlobalConfig, Project } from '../shared/types'
 
 interface ArnZenAPI {
   loadProjects: () => Promise<{ projects: Project[]; lastActiveProjectId: string | null }>
@@ -28,6 +28,14 @@ interface ArnZenAPI {
   gitDeleteBranch: (cwd: string, branch: string) => Promise<void>
   gitFetch: (cwd: string) => Promise<void>
   gitPull: (cwd: string) => Promise<void>
+  gitStatusDetail: (cwd: string) => Promise<GitStatusDetailResult>
+  gitStage: (cwd: string, paths: string[]) => Promise<void>
+  gitStageAll: (cwd: string) => Promise<void>
+  gitUnstage: (cwd: string, paths: string[]) => Promise<void>
+  gitUnstageAll: (cwd: string) => Promise<void>
+  gitDiscard: (cwd: string, paths: string[]) => Promise<void>
+  gitCommit: (cwd: string, message: string) => Promise<void>
+  gitPush: (cwd: string) => Promise<void>
 
   // Filesystem (editor)
   readDir: (dirPath: string) => Promise<DirEntry[]>

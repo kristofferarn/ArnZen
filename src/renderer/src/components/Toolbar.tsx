@@ -12,13 +12,11 @@ export function Toolbar(): React.JSX.Element {
   const { running, peekOpen, setRunning, togglePeek, closePeek } = useDevServerStore()
 
   const [showProjectMenu, setShowProjectMenu] = useState(false)
-  const [showWidgetMenu, setShowWidgetMenu] = useState(false)
   const [showDevPopover, setShowDevPopover] = useState(false)
   const [editingCommand, setEditingCommand] = useState(false)
   const [commandDraft, setCommandDraft] = useState('')
 
   const projectMenuRef = useRef<HTMLDivElement>(null)
-  const widgetMenuRef = useRef<HTMLDivElement>(null)
   const devPopoverRef = useRef<HTMLDivElement>(null)
 
   const isDevServerRunning = project ? running.has(project.id) : false
@@ -70,9 +68,6 @@ export function Toolbar(): React.JSX.Element {
       if (projectMenuRef.current && !projectMenuRef.current.contains(e.target as Node)) {
         setShowProjectMenu(false)
       }
-      if (widgetMenuRef.current && !widgetMenuRef.current.contains(e.target as Node)) {
-        setShowWidgetMenu(false)
-      }
       if (devPopoverRef.current && !devPopoverRef.current.contains(e.target as Node)) {
         setShowDevPopover(false)
         setEditingCommand(false)
@@ -91,13 +86,6 @@ export function Toolbar(): React.JSX.Element {
   }
 
   const existingLeaves = project ? getMosaicLeaves(project.layout.mosaic) : []
-  const availableWidgets = widgetRegistry.filter((w) => {
-    if (w.allowMultiple) return true
-    return (
-      !existingLeaves.some((p) => getBaseType(p) === w.id) &&
-      !project?.layout.minimized.some((p) => getBaseType(p) === w.id)
-    )
-  })
 
   return (
     <div className="relative z-10 flex items-center h-10 bg-[var(--color-bg-secondary)] border-b border-[var(--color-border)] px-3 app-no-drag">
@@ -322,70 +310,47 @@ export function Toolbar(): React.JSX.Element {
       {/* Divider */}
       <div className="w-px h-4 bg-[var(--color-border)]" />
 
-      {/* Add widget */}
-      <div className="relative" ref={widgetMenuRef}>
-        <button
-          onClick={() => project && setShowWidgetMenu(!showWidgetMenu)}
-          disabled={!project}
-          className="flex items-center gap-1.5 px-2.5 h-7 rounded-md text-sm text-[var(--color-text-muted)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)] transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
-          title="Add widget"
-        >
-          <Plus size={15} />
-          <span>Widget</span>
-        </button>
+      {/* Widget buttons */}
+      {widgetRegistry.map((w) => {
+        const Icon = w.icon
+        const isPresent = !w.allowMultiple && (
+          existingLeaves.some((p) => getBaseType(p) === w.id) ||
+          project?.layout.minimized.some((p) => getBaseType(p) === w.id)
+        )
+        return (
+          <button
+            key={w.id}
+            onClick={() => addPanel(w.id)}
+            disabled={!project || isPresent}
+            className="flex items-center gap-1.5 px-2 h-7 rounded-md text-xs transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--color-bg-hover)]"
+            style={{ color: w.color }}
+            title={isPresent ? `${w.label} is already active` : w.label}
+          >
+            <Icon size={14} />
+            <span>{w.label}</span>
+          </button>
+        )
+      })}
 
-        {showWidgetMenu && (
-          <div className="absolute top-full right-0 mt-1 w-48 py-1 rounded-md bg-[var(--color-surface-overlay)] border border-[var(--color-border-strong)] shadow-lg z-50">
-            {availableWidgets.length > 0 ? (
-              availableWidgets.map((w) => {
-                const Icon = w.icon
-                return (
-                  <button
-                    key={w.id}
-                    onClick={() => {
-                      addPanel(w.id)
-                      setShowWidgetMenu(false)
-                    }}
-                    className="flex items-center gap-2.5 w-full px-3 py-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)] transition-colors duration-150"
-                  >
-                    <span style={{ color: w.color }}><Icon size={15} /></span>
-                    <span>{w.label}</span>
-                  </button>
-                )
-              })
-            ) : (
-              <div className="px-3 py-1.5 text-sm text-[var(--color-text-muted)]">
-                All widgets active
-              </div>
-            )}
-
-            {/* Terminal presets */}
-            {terminalPresets.length > 0 && project && (
-              <div className="border-t border-[var(--color-border)] mt-1 pt-1">
-                {terminalPresets.map((preset) => {
-                  const PresetIcon = preset.icon
-                  return (
-                    <button
-                      key={preset.label}
-                      onClick={() => {
-                        addPanel('terminal', {
-                          label: preset.label,
-                          initialCommand: preset.initialCommand
-                        })
-                        setShowWidgetMenu(false)
-                      }}
-                      className="flex items-center gap-2.5 w-full px-3 py-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] hover:bg-[var(--color-bg-hover)] transition-colors duration-150"
-                    >
-                      <span style={{ color: preset.color }}><PresetIcon size={15} /></span>
-                      <span>{preset.label}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      {terminalPresets.map((preset) => {
+        const PresetIcon = preset.icon
+        return (
+          <button
+            key={preset.label}
+            onClick={() => addPanel('terminal', {
+              label: preset.label,
+              initialCommand: preset.initialCommand
+            })}
+            disabled={!project}
+            className="flex items-center gap-1.5 px-2 h-7 rounded-md text-xs transition-colors duration-150 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-[var(--color-bg-hover)]"
+            style={{ color: preset.color }}
+            title={preset.label}
+          >
+            <PresetIcon size={14} />
+            <span>{preset.label}</span>
+          </button>
+        )
+      })}
       </div>
     </div>
   )

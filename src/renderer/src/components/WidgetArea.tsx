@@ -126,6 +126,7 @@ export function WidgetArea(): React.JSX.Element {
   if (mosaic === null) {
     const descriptions: Record<string, string> = {
       todo: 'Track tasks and stay organized',
+      'source-control': 'Stage, commit, and push changes',
       terminal: 'Run commands in your project'
     }
 
