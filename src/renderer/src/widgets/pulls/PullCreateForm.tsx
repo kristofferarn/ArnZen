@@ -32,6 +32,7 @@ export function PullCreateForm({
   const [body, setBody] = useState(defaults.body)
   const [head, setHead] = useState(currentBranch ?? '')
   const [base, setBase] = useState(defaultBranch ?? '')
+  const suggestedTitle = head && base ? `merge ${head} into ${base}` : ''
   const [userChangedBase, setUserChangedBase] = useState(false)
   const [selectedLabels, setSelectedLabels] = useState<string[]>([])
 
@@ -40,9 +41,9 @@ export function PullCreateForm({
   }, [defaultBranch, userChangedBase])
 
   const handleSubmit = (): void => {
-    const trimmed = title.trim()
-    if (!trimmed || creating) return
-    onSubmit(trimmed, body.trim(), head, base, selectedLabels)
+    const effective = title.trim() || suggestedTitle
+    if (!effective || creating) return
+    onSubmit(effective, body.trim(), head, base, selectedLabels)
   }
 
   const handleToggleLabel = (name: string): void => {
@@ -78,7 +79,7 @@ export function PullCreateForm({
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSubmit()}
-        placeholder="PR title"
+        placeholder={suggestedTitle || 'PR title'}
         autoFocus
         className="w-full bg-[var(--color-bg-tertiary)] text-[var(--color-text-primary)] text-sm px-3 py-2 rounded-md border border-[var(--color-border)] outline-none focus:border-[var(--color-accent)]/50 transition-colors duration-150 placeholder:text-[var(--color-text-muted)]"
       />
@@ -101,7 +102,7 @@ export function PullCreateForm({
         />
         <button
           onClick={handleSubmit}
-          disabled={!title.trim() || creating}
+          disabled={(!title.trim() && !suggestedTitle) || creating}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium bg-[var(--color-accent)] hover:bg-[var(--color-accent-hover)] text-[var(--color-bg-deep)] transition-colors duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {creating && <Loader2 size={12} className="animate-spin" />}
