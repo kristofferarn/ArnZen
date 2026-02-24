@@ -5,6 +5,7 @@ import { FitAddon } from '@xterm/addon-fit'
 import { WebglAddon } from '@xterm/addon-webgl'
 import { useActiveProject } from '../stores/workspace-store'
 import { useDevServerStore } from '../stores/devserver-store'
+import { attachClipboardHandler } from '../lib/terminal-clipboard'
 import { DEV_SERVER_SUFFIX } from '../../../shared/types'
 
 export function DevServerPeek(): React.JSX.Element | null {
@@ -93,6 +94,8 @@ function DevServerPeekPanel({ projectId, rootPath, devCommand, onClose, onRunnin
     fitAddonRef.current = fitAddon
 
     terminal.open(containerRef.current)
+
+    attachClipboardHandler(terminal)
 
     try {
       terminal.loadAddon(new WebglAddon())
