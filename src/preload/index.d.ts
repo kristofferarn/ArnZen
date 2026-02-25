@@ -56,6 +56,7 @@ interface ArnZenAPI {
   ghCommentPr: (cwd: string, prNumber: number, body: string) => Promise<void>
 
   // Filesystem (editor)
+  globFiles: (rootPath: string, extension: string) => Promise<string[]>
   readDir: (dirPath: string) => Promise<DirEntry[]>
   readFile: (filePath: string) => Promise<{ content: string } | { error: string }>
   watchFile: (watchId: string, filePath: string) => void

@@ -63,6 +63,11 @@ function DraggableTrayButton({
       if (viewerState?.currentFilePath) {
         displayLabel = viewerState.currentFilePath.split(/[\\/]/).pop() || widgetDef.label
       }
+    } else if (baseType === 'markdown-viewer') {
+      const mdState = project.widgetState.markdownViewers[suffix]
+      if (mdState?.currentFilePath) {
+        displayLabel = mdState.currentFilePath.split(/[\\/]/).pop() || widgetDef.label
+      }
     }
   }
 

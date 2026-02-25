@@ -157,6 +157,13 @@ export interface FileViewerInstanceState {
   wordWrap: boolean
 }
 
+// ── Markdown viewer types ──
+
+export interface MarkdownViewerInstanceState {
+  currentFilePath: string | null
+  viewMode: 'view' | 'code'
+}
+
 // ── Mosaic layout types (structurally compatible with react-mosaic's MosaicNode) ──
 
 export type MosaicDirection = 'row' | 'column'
@@ -178,6 +185,7 @@ export interface WidgetState {
   terminalCwd: string
   terminals: Record<string, TerminalInstanceState>
   fileViewers: Record<string, FileViewerInstanceState>
+  markdownViewers: Record<string, MarkdownViewerInstanceState>
   notes: string
   viewMode: ViewMode
   editorOpenFiles: string[]
@@ -203,9 +211,18 @@ export interface ProjectSettings {
   devCommand: string
 }
 
+export interface WindowBounds {
+  x: number
+  y: number
+  width: number
+  height: number
+  isMaximized: boolean
+}
+
 export interface GlobalConfig {
   projects: { id: string; rootPath: string }[]
   lastActiveProjectId: string | null
+  windowBounds?: WindowBounds
 }
 
 export interface WorkspaceConfig {
@@ -218,6 +235,7 @@ export const DEFAULT_WIDGET_STATE: WidgetState = {
   terminalCwd: '',
   terminals: {},
   fileViewers: {},
+  markdownViewers: {},
   notes: '',
   viewMode: 'widgets',
   editorOpenFiles: [],

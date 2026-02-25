@@ -1,11 +1,12 @@
 import { ComponentType } from 'react'
-import { Bot, CheckSquare, CircleDot, FileSearch, GitCommitHorizontal, GitPullRequestDraft, Terminal } from 'lucide-react'
+import { BookOpen, Bot, CheckSquare, CircleDot, FileSearch, GitCommitHorizontal, GitPullRequestDraft, Terminal } from 'lucide-react'
 import { TodoWidget } from '../widgets/TodoWidget'
 import { TerminalWidget } from '../widgets/TerminalWidget'
 import { SourceControlWidget } from '../widgets/source-control/SourceControlWidget'
 import { IssuesWidget } from '../widgets/issues/IssuesWidget'
 import { PullsWidget } from '../widgets/pulls/PullsWidget'
 import { FileViewerWidget } from '../widgets/FileViewerWidget'
+import { MarkdownViewerWidget } from '../widgets/MarkdownViewerWidget'
 
 export interface WidgetDefinition {
   id: string
@@ -58,6 +59,14 @@ export const widgetRegistry: WidgetDefinition[] = [
     icon: FileSearch,
     component: FileViewerWidget,
     color: '#7ba5b8',
+    allowMultiple: true
+  },
+  {
+    id: 'markdown-viewer',
+    label: 'Markdown',
+    icon: BookOpen,
+    component: MarkdownViewerWidget,
+    color: '#c9956b',
     allowMultiple: true
   },
   {
