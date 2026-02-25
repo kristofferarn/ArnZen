@@ -385,7 +385,7 @@ export function Toolbar(): React.JSX.Element {
 
         {showMoreMenu && (
           <div className="absolute top-full right-0 mt-1 w-48 py-1 rounded-md bg-[var(--color-surface-overlay)] border border-[var(--color-border-strong)] shadow-lg z-50">
-            {widgetRegistry.filter((w) => w.id === 'todo' || w.id === 'file-viewer' || w.id === 'terminal').map((w) => {
+            {widgetRegistry.filter((w) => w.id === 'todo' || w.id === 'file-viewer' || w.id === 'markdown-viewer' || w.id === 'terminal').map((w) => {
               const Icon = w.icon
               const isPresent = !w.allowMultiple && (
                 existingLeaves.some((p) => getBaseType(p) === w.id) ||

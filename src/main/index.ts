@@ -892,6 +892,39 @@ app.whenReady().then(() => {
     }
   })
 
+  // IPC: Recursively find files by extension
+  ipcMain.handle('fs:glob-files', async (_event, rootPath: string, extension: string): Promise<string[]> => {
+    const results: string[] = []
+    const ext = extension.startsWith('.') ? extension : `.${extension}`
+
+    function walk(dir: string): void {
+      try {
+        const entries = readdirSync(dir)
+        for (const name of entries) {
+          if (FILTERED_NAMES.has(name)) continue
+          try {
+            const fullPath = join(dir, name)
+            const stat = statSync(fullPath)
+            if (stat.isDirectory()) {
+              walk(fullPath)
+            } else if (name.toLowerCase().endsWith(ext)) {
+              // Store as forward-slash relative path
+              results.push(fullPath.slice(rootPath.length).replace(/\\/g, '/').replace(/^\//, ''))
+            }
+          } catch {
+            // Skip entries we can't stat
+          }
+        }
+      } catch {
+        // Skip directories we can't read
+      }
+    }
+
+    walk(rootPath)
+    results.sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }))
+    return results
+  })
+
   // IPC: Read file contents (for editor viewer)
   const MAX_FILE_SIZE = 1024 * 1024 // 1MB
 
