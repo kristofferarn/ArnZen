@@ -106,6 +106,8 @@ const api = {
     ipcRenderer.invoke('gh:comment-pr', cwd, prNumber, body),
 
   // Filesystem (editor)
+  globFiles: (rootPath: string, extension: string): Promise<string[]> =>
+    ipcRenderer.invoke('fs:glob-files', rootPath, extension),
   readDir: (dirPath: string): Promise<DirEntry[]> =>
     ipcRenderer.invoke('fs:read-dir', dirPath),
   readFile: (filePath: string): Promise<{ content: string } | { error: string }> =>
