@@ -203,9 +203,18 @@ export interface ProjectSettings {
   devCommand: string
 }
 
+export interface WindowBounds {
+  x: number
+  y: number
+  width: number
+  height: number
+  isMaximized: boolean
+}
+
 export interface GlobalConfig {
   projects: { id: string; rootPath: string }[]
   lastActiveProjectId: string | null
+  windowBounds?: WindowBounds
 }
 
 export interface WorkspaceConfig {

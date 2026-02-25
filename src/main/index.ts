@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog, screen } from 'electron'
 import { join } from 'path'
 import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync, statSync, watch, FSWatcher } from 'fs'
 import { execFile } from 'child_process'
@@ -21,6 +21,7 @@ import {
   Project,
   WidgetLayout,
   WidgetState,
+  WindowBounds,
   WorkspaceConfig,
   panelsToMosaicTree
 } from '../shared/types'
@@ -264,8 +265,23 @@ function migrateGlobalConfig(): GlobalConfig {
   return newConfig
 }
 
+function isWindowBoundsVisible(bounds: WindowBounds): boolean {
+  const displays = screen.getAllDisplays()
+  // Check that at least a portion of the window is visible on some display
+  const minVisible = 100
+  return displays.some((display) => {
+    const { x, y, width, height } = display.workArea
+    const overlapX = Math.max(0, Math.min(bounds.x + bounds.width, x + width) - Math.max(bounds.x, x))
+    const overlapY = Math.max(0, Math.min(bounds.y + bounds.height, y + height) - Math.max(bounds.y, y))
+    return overlapX >= minVisible && overlapY >= minVisible
+  })
+}
+
 function createWindow(): void {
-  const mainWindow = new BrowserWindow({
+  const globalConfig = readGlobalConfig()
+  const savedBounds = globalConfig.windowBounds
+
+  const windowOptions: Electron.BrowserWindowConstructorOptions = {
     width: 1200,
     height: 800,
     minWidth: 800,
@@ -279,6 +295,35 @@ function createWindow(): void {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false
     }
+  }
+
+  if (savedBounds && isWindowBoundsVisible(savedBounds)) {
+    windowOptions.x = savedBounds.x
+    windowOptions.y = savedBounds.y
+    windowOptions.width = savedBounds.width
+    windowOptions.height = savedBounds.height
+  }
+
+  const mainWindow = new BrowserWindow(windowOptions)
+
+  if (savedBounds?.isMaximized) {
+    mainWindow.maximize()
+  }
+
+  // Save window bounds on close
+  mainWindow.on('close', () => {
+    const isMaximized = mainWindow.isMaximized()
+    const bounds = mainWindow.getNormalBounds()
+    const windowBounds: WindowBounds = {
+      x: bounds.x,
+      y: bounds.y,
+      width: bounds.width,
+      height: bounds.height,
+      isMaximized
+    }
+    const config = readGlobalConfig()
+    config.windowBounds = windowBounds
+    writeGlobalConfig(config)
   })
 
   mainWindow.on('ready-to-show', () => {
@@ -338,7 +383,12 @@ app.whenReady().then(() => {
   })
 
   // IPC: Save global state (active project, project list)
+  // Preserve windowBounds from existing config since the renderer doesn't manage them
   ipcMain.handle('save-global-config', async (_event, config: GlobalConfig) => {
+    const existing = readGlobalConfig()
+    if (existing.windowBounds && !config.windowBounds) {
+      config.windowBounds = existing.windowBounds
+    }
     writeGlobalConfig(config)
   })
 
