@@ -1,5 +1,5 @@
 import { ComponentType } from 'react'
-import { BookOpen, Bot, CheckSquare, CircleDot, FileSearch, GitCommitHorizontal, GitPullRequestDraft, Terminal } from 'lucide-react'
+import { BookOpen, Bot, CheckSquare, CircleDot, FileEdit, FileSearch, GitCommitHorizontal, GitPullRequestDraft, Terminal } from 'lucide-react'
 import { TodoWidget } from '../widgets/TodoWidget'
 import { TerminalWidget } from '../widgets/TerminalWidget'
 import { SourceControlWidget } from '../widgets/source-control/SourceControlWidget'
@@ -7,6 +7,7 @@ import { IssuesWidget } from '../widgets/issues/IssuesWidget'
 import { PullsWidget } from '../widgets/pulls/PullsWidget'
 import { FileViewerWidget } from '../widgets/FileViewerWidget'
 import { MarkdownViewerWidget } from '../widgets/MarkdownViewerWidget'
+import { ScratchPadWidget } from '../widgets/ScratchPadWidget'
 
 export interface WidgetDefinition {
   id: string
@@ -67,6 +68,14 @@ export const widgetRegistry: WidgetDefinition[] = [
     icon: BookOpen,
     component: MarkdownViewerWidget,
     color: '#c9956b',
+    allowMultiple: true
+  },
+  {
+    id: 'scratch-pad',
+    label: 'Scratch Pad',
+    icon: FileEdit,
+    component: ScratchPadWidget,
+    color: '#a0956b',
     allowMultiple: true
   },
   {
