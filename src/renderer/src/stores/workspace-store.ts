@@ -10,6 +10,7 @@ import {
   TerminalInstanceState,
   FileViewerInstanceState,
   MarkdownViewerInstanceState,
+  ScratchPadInstanceState,
   MosaicLayoutNode,
   MosaicDirection,
   MosaicParentNode,
@@ -55,6 +56,7 @@ interface WorkspaceState {
   updateTerminalLabel: (instanceSuffix: string, label: string) => void
   updateFileViewerState: (instanceSuffix: string, updates: Partial<FileViewerInstanceState>) => void
   updateMarkdownViewerState: (instanceSuffix: string, updates: Partial<MarkdownViewerInstanceState>) => void
+  updateScratchPadState: (instanceSuffix: string, updates: Partial<ScratchPadInstanceState>) => void
 
   // Dev server
   updateDevCommand: (command: string) => void
@@ -406,6 +408,28 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
             ...p.widgetState,
             markdownViewers: {
               ...p.widgetState.markdownViewers,
+              [instanceSuffix]: { ...existing, ...updates }
+            }
+          }
+        }
+      })
+    }))
+  },
+
+  updateScratchPadState: (instanceSuffix, updates) => {
+    const { activeProjectId } = get()
+    if (!activeProjectId) return
+    set((s) => ({
+      projects: s.projects.map((p) => {
+        if (p.id !== activeProjectId) return p
+        const existing = p.widgetState.scratchPads[instanceSuffix]
+        if (!existing) return p
+        return {
+          ...p,
+          widgetState: {
+            ...p.widgetState,
+            scratchPads: {
+              ...p.widgetState.scratchPads,
               [instanceSuffix]: { ...existing, ...updates }
             }
           }
