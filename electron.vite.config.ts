@@ -1,4 +1,5 @@
 import { resolve } from 'path'
+import { realpathSync } from 'fs'
 import { defineConfig } from 'electron-vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
@@ -14,6 +15,14 @@ export default defineConfig({
   },
   preload: {},
   renderer: {
+    // Git worktrees symlink node_modules to the main repo — Vite resolves the
+    // real path and blocks it as outside the project root. realpathSync follows
+    // the symlink so the actual directory gets allow-listed.
+    server: {
+      fs: {
+        allow: [resolve('.'), realpathSync(resolve('node_modules'))]
+      }
+    },
     resolve: {
       alias: {
         '@renderer': resolve('src/renderer/src'),
