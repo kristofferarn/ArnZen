@@ -164,6 +164,20 @@ export interface MarkdownViewerInstanceState {
   viewMode: 'view' | 'code'
 }
 
+// ── Scratch pad types ──
+
+export interface ScratchPadTab {
+  id: string
+  name: string
+  content: string
+  language: string
+}
+
+export interface ScratchPadInstanceState {
+  tabs: ScratchPadTab[]
+  activeTabId: string
+}
+
 // ── Mosaic layout types (structurally compatible with react-mosaic's MosaicNode) ──
 
 export type MosaicDirection = 'row' | 'column'
@@ -186,6 +200,7 @@ export interface WidgetState {
   terminals: Record<string, TerminalInstanceState>
   fileViewers: Record<string, FileViewerInstanceState>
   markdownViewers: Record<string, MarkdownViewerInstanceState>
+  scratchPads: Record<string, ScratchPadInstanceState>
   notes: string
   viewMode: ViewMode
   editorOpenFiles: string[]
@@ -236,6 +251,7 @@ export const DEFAULT_WIDGET_STATE: WidgetState = {
   terminals: {},
   fileViewers: {},
   markdownViewers: {},
+  scratchPads: {},
   notes: '',
   viewMode: 'widgets',
   editorOpenFiles: [],

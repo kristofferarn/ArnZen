@@ -10,6 +10,8 @@ import {
   TerminalInstanceState,
   FileViewerInstanceState,
   MarkdownViewerInstanceState,
+  ScratchPadInstanceState,
+  ScratchPadTab,
   MosaicLayoutNode,
   MosaicDirection,
   MosaicParentNode,
@@ -55,6 +57,7 @@ interface WorkspaceState {
   updateTerminalLabel: (instanceSuffix: string, label: string) => void
   updateFileViewerState: (instanceSuffix: string, updates: Partial<FileViewerInstanceState>) => void
   updateMarkdownViewerState: (instanceSuffix: string, updates: Partial<MarkdownViewerInstanceState>) => void
+  updateScratchPadState: (instanceSuffix: string, updates: Partial<ScratchPadInstanceState>) => void
 
   // Dev server
   updateDevCommand: (command: string) => void
@@ -180,6 +183,21 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
               ...p.widgetState,
               markdownViewers: { ...p.widgetState.markdownViewers, [instanceSuffix]: mdState }
             }
+          } else if (widgetId === 'scratch-pad') {
+            const defaultTab: ScratchPadTab = {
+              id: uuid(),
+              name: 'Scratch 1',
+              content: '',
+              language: 'plaintext'
+            }
+            const scratchState: ScratchPadInstanceState = {
+              tabs: [defaultTab],
+              activeTabId: defaultTab.id
+            }
+            newWidgetState = {
+              ...p.widgetState,
+              scratchPads: { ...p.widgetState.scratchPads, [instanceSuffix]: scratchState }
+            }
           }
         } else {
           panelId = widgetId
@@ -233,6 +251,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
           window.api.unwatchFile(`markdown-viewer:${suffix}`)
           const { [suffix]: _, ...remainingViewers } = p.widgetState.markdownViewers
           newWidgetState = { ...p.widgetState, markdownViewers: remainingViewers }
+        } else if (baseType === 'scratch-pad' && suffix) {
+          const { [suffix]: _, ...remainingPads } = p.widgetState.scratchPads
+          newWidgetState = { ...p.widgetState, scratchPads: remainingPads }
         }
 
         return {
@@ -406,6 +427,28 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
             ...p.widgetState,
             markdownViewers: {
               ...p.widgetState.markdownViewers,
+              [instanceSuffix]: { ...existing, ...updates }
+            }
+          }
+        }
+      })
+    }))
+  },
+
+  updateScratchPadState: (instanceSuffix, updates) => {
+    const { activeProjectId } = get()
+    if (!activeProjectId) return
+    set((s) => ({
+      projects: s.projects.map((p) => {
+        if (p.id !== activeProjectId) return p
+        const existing = p.widgetState.scratchPads[instanceSuffix]
+        if (!existing) return p
+        return {
+          ...p,
+          widgetState: {
+            ...p.widgetState,
+            scratchPads: {
+              ...p.widgetState.scratchPads,
               [instanceSuffix]: { ...existing, ...updates }
             }
           }
