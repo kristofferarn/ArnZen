@@ -251,6 +251,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
           window.api.unwatchFile(`markdown-viewer:${suffix}`)
           const { [suffix]: _, ...remainingViewers } = p.widgetState.markdownViewers
           newWidgetState = { ...p.widgetState, markdownViewers: remainingViewers }
+        } else if (baseType === 'scratch-pad' && suffix) {
+          const { [suffix]: _, ...remainingPads } = p.widgetState.scratchPads
+          newWidgetState = { ...p.widgetState, scratchPads: remainingPads }
         }
 
         return {
