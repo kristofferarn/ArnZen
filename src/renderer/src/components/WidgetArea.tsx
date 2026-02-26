@@ -173,6 +173,13 @@ export function WidgetArea(): React.JSX.Element {
         action: () => addPanel('pulls')
       },
       {
+        label: 'Scratch Pad',
+        icon: widgetRegistry.find((w) => w.id === 'scratch-pad')!.icon,
+        color: widgetRegistry.find((w) => w.id === 'scratch-pad')!.color,
+        description: 'Quick notes and code snippets',
+        action: () => addPanel('scratch-pad')
+      },
+      {
         label: terminalPresets[0].label,
         icon: terminalPresets[0].icon,
         color: terminalPresets[0].color,
