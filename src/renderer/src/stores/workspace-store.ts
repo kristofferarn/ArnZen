@@ -11,6 +11,7 @@ import {
   FileViewerInstanceState,
   MarkdownViewerInstanceState,
   ScratchPadInstanceState,
+  ScratchPadTab,
   MosaicLayoutNode,
   MosaicDirection,
   MosaicParentNode,
@@ -181,6 +182,21 @@ export const useWorkspaceStore = create<WorkspaceState>((set, get) => ({
             newWidgetState = {
               ...p.widgetState,
               markdownViewers: { ...p.widgetState.markdownViewers, [instanceSuffix]: mdState }
+            }
+          } else if (widgetId === 'scratch-pad') {
+            const defaultTab: ScratchPadTab = {
+              id: uuid(),
+              name: 'Scratch 1',
+              content: '',
+              language: 'plaintext'
+            }
+            const scratchState: ScratchPadInstanceState = {
+              tabs: [defaultTab],
+              activeTabId: defaultTab.id
+            }
+            newWidgetState = {
+              ...p.widgetState,
+              scratchPads: { ...p.widgetState.scratchPads, [instanceSuffix]: scratchState }
             }
           }
         } else {
