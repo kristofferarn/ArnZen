@@ -10,3 +10,6 @@ Thumbs.db
 .env.*
 .arnzen/
 .claude/
+
+# Auto Claude data directory
+.auto-claude/
